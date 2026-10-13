@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --color-marca-50: #eef4ff;
+  --color-marca-100: #dbe6fe;
+  --color-marca-500: #3b6cf6;
+  --color-marca-600: #2552e0;
+  --color-marca-700: #1d41b3;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: #f6f7fb;
+  color: #1f2433;
+}
+
+/* Inputs "invisibles" para edición en línea */
+@utility celda-input {
+  @apply w-full rounded bg-transparent px-2 py-1 outline-none focus:bg-white focus:ring-2 focus:ring-marca-500;
+}
+
+@utility btn {
+  @apply inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition disabled:opacity-50;
+}
+@utility btn-primario {
+  @apply btn bg-marca-600 text-white hover:bg-marca-700;
+}
+@utility btn-secundario {
+  @apply btn border border-slate-300 bg-white text-slate-700 hover:bg-slate-50;
+}
+@utility btn-peligro {
+  @apply btn border border-red-200 bg-white text-red-600 hover:bg-red-50;
+}
+@utility campo {
+  @apply w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-marca-500 focus:ring-2 focus:ring-marca-100;
+}
+@utility etiqueta {
+  @apply mb-1 block text-xs font-medium text-slate-500;
+}
