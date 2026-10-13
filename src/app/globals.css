@@ -1,44 +1,165 @@
 @import "tailwindcss";
 
+/* Modo oscuro por clase (la pone el script de tema en <html>). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --color-marca-50: #eef4ff;
   --color-marca-100: #dbe6fe;
+  --color-marca-400: #6b8ff8;
   --color-marca-500: #3b6cf6;
   --color-marca-600: #2552e0;
   --color-marca-700: #1d41b3;
+
+  /* Superficies semánticas: cambian con el tema. */
+  --color-fondo: #f6f7fb;
+  --color-superficie: #ffffff;
+  --color-superficie-elevada: #ffffff;
+
+  --animate-aparecer: aparecer 160ms ease-out;
+  --animate-escalar: escalar 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-deslizar-derecha: deslizar-derecha 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-deslizar-izquierda: deslizar-izquierda 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-subir: subir 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-brillo: brillo 1.4s ease-in-out infinite;
+
+  @keyframes aparecer {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes escalar {
+    from { opacity: 0; transform: translateY(6px) scale(0.97); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes deslizar-derecha {
+    from { transform: translateX(100%); }
+    to { transform: none; }
+  }
+  @keyframes deslizar-izquierda {
+    from { transform: translateX(-100%); }
+    to { transform: none; }
+  }
+  @keyframes subir {
+    from { opacity: 0; transform: translateY(12px) scale(0.98); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes brillo {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.45; }
+  }
 }
 
-html,
-body {
-  height: 100%;
+/*
+ * Modo oscuro: en lugar de añadir `dark:` a cada clase, invertimos la escala
+ * slate y ajustamos los tonos claros. Así todo el UI existente se adapta.
+ */
+.dark {
+  color-scheme: dark;
+  --color-fondo: #0c1018;
+  --color-superficie: #141a24;
+  --color-superficie-elevada: #1a2130;
+
+  --color-slate-50: #19202c;
+  --color-slate-100: #1f2735;
+  --color-slate-200: #283143;
+  --color-slate-300: #374156;
+  --color-slate-400: #6f7b91;
+  --color-slate-500: #919cb0;
+  --color-slate-600: #aeb7c7;
+  --color-slate-700: #c9d0dc;
+  --color-slate-800: #e0e5ed;
+  --color-slate-900: #eef1f6;
+  --color-slate-950: #f8fafc;
+
+  --color-marca-50: #172241;
+  --color-marca-100: #1e2d57;
+  --color-marca-700: #9db8ff;
+
+  --color-red-50: #2f1619;
+  --color-red-200: #5a2830;
+  --color-red-600: #f87171;
+  --color-red-700: #fca5a5;
+  --color-amber-600: #fbbf24;
+  --color-green-600: #4ade80;
 }
 
-body {
-  background: #f6f7fb;
-  color: #1f2433;
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    background: var(--color-fondo);
+    color: var(--color-slate-800);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Transición suave al cambiar de tema (se activa solo durante el cambio). */
+  html.cambiando-tema *,
+  html.cambiando-tema *::before,
+  html.cambiando-tema *::after {
+    transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease !important;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-marca-500) 30%, transparent);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-marca-500);
+    outline-offset: 2px;
+  }
+
+  /* Barras de scroll discretas */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-slate-300) transparent;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 1ms !important;
+      transition-duration: 1ms !important;
+    }
+  }
 }
 
 /* Inputs "invisibles" para edición en línea */
 @utility celda-input {
-  @apply w-full rounded bg-transparent px-2 py-1 outline-none focus:bg-white focus:ring-2 focus:ring-marca-500;
+  @apply w-full rounded bg-transparent px-2 py-1 outline-none focus:bg-superficie focus:ring-2 focus:ring-marca-500;
 }
 
 @utility btn {
-  @apply inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition disabled:opacity-50;
+  @apply inline-flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium whitespace-nowrap transition select-none active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50;
 }
 @utility btn-primario {
-  @apply btn bg-marca-600 text-white hover:bg-marca-700;
+  @apply btn bg-marca-600 text-white shadow-sm shadow-marca-600/20 hover:bg-marca-500;
 }
 @utility btn-secundario {
-  @apply btn border border-slate-300 bg-white text-slate-700 hover:bg-slate-50;
+  @apply btn border border-slate-200 bg-superficie text-slate-700 shadow-xs hover:border-slate-300 hover:bg-slate-50;
 }
 @utility btn-peligro {
-  @apply btn border border-red-200 bg-white text-red-600 hover:bg-red-50;
+  @apply btn bg-red-500 text-white shadow-sm hover:bg-red-400;
+}
+@utility btn-fantasma {
+  @apply btn text-slate-600 hover:bg-slate-100 hover:text-slate-800;
 }
 @utility campo {
-  @apply w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-marca-500 focus:ring-2 focus:ring-marca-100;
+  @apply w-full rounded-lg border border-slate-200 bg-superficie px-2.5 py-1.5 text-sm shadow-xs transition outline-none placeholder:text-slate-400 hover:border-slate-300 focus:border-marca-500 focus:ring-3 focus:ring-marca-500/15;
 }
 @utility etiqueta {
   @apply mb-1 block text-xs font-medium text-slate-500;
+}
+@utility tarjeta {
+  @apply rounded-xl border border-slate-200 bg-superficie shadow-xs;
+}
+@utility esqueleto {
+  @apply animate-brillo rounded-md bg-slate-200/70;
+}
+@utility kbd {
+  @apply inline-flex h-5 min-w-5 items-center justify-center rounded border border-slate-200 bg-slate-50 px-1 font-sans text-[10px] font-medium text-slate-500;
 }
