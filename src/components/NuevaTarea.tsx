@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { useDatos } from "@/components/datos/DatosProvider";
+import Portal from "@/components/ui/Portal";
 import { ESTATUS, PRIORIDADES, type Estatus, type Prioridad } from "@/types/db";
 
 /** Botón + modal para crear una tarea con los datos mínimos. */
@@ -52,6 +53,7 @@ export default function NuevaTarea({
         <Plus size={16} /> Nueva tarea
       </button>
       {abierto && (
+        <Portal>
         <div className="fixed inset-0 z-[60] flex items-start justify-center bg-slate-900/30 p-4 pt-[12vh]">
           <form
             onSubmit={crear}
@@ -139,6 +141,7 @@ export default function NuevaTarea({
             </div>
           </form>
         </div>
+        </Portal>
       )}
     </>
   );
