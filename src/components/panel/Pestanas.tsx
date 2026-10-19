@@ -7,98 +7,11 @@ import { useDatos } from "@/components/datos/DatosProvider";
 import Avatar from "@/components/ui/Avatar";
 import { formatoFecha, formatoFechaHora, formatoMinutos, hoyMx } from "@/lib/ui";
 import { formatoCronometro, useAhora } from "@/lib/useAhora";
-import type { ComentarioTarea, Historial, RegistroTiempo, Tarea } from "@/types/db";
+import type { Historial, RegistroTiempo, Tarea } from "@/types/db";
 import { useFilasTarea } from "./useFilasTarea";
 
-const ORDEN_ASC = { columna: "created_at", asc: true };
 const ORDEN_INICIO = { columna: "inicio", asc: false };
 const ORDEN_FECHA = { columna: "fecha", asc: false };
-
-// ===================================================================== Comentarios
-export function PestanaComentarios({ tarea }: { tarea: Tarea }) {
-  const supabase = supabaseNavegador();
-  const { yo, esAdmin, miembroPorId, avisar } = useDatos();
-  const { filas, cargando, recargar } = useFilasTarea<ComentarioTarea>(
-    "comentarios_tarea",
-    tarea.id,
-    ORDEN_ASC,
-  );
-  const [texto, setTexto] = useState("");
-  const [enviando, setEnviando] = useState(false);
-
-  async function enviar() {
-    const limpio = texto.trim();
-    if (!limpio) return;
-    setEnviando(true);
-    const { error } = await supabase
-      .from("comentarios_tarea")
-      .insert({ tarea_id: tarea.id, miembro_id: yo.id, texto: limpio });
-    setEnviando(false);
-    if (error) return avisar(error.message);
-    setTexto("");
-    recargar();
-  }
-
-  async function borrar(id: string) {
-    if (!confirm("¿Borrar este comentario?")) return;
-    const { error } = await supabase.from("comentarios_tarea").delete().eq("id", id);
-    if (error) return avisar(error.message);
-    recargar();
-  }
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="rounded-lg border border-slate-200 p-2 focus-within:border-marca-500">
-        <textarea
-          value={texto}
-          onChange={(e) => setTexto(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) enviar();
-          }}
-          rows={3}
-          placeholder="Escribe un comentario… (Ctrl/⌘ + Enter para enviar)"
-          className="w-full resize-none text-sm outline-none"
-        />
-        <div className="flex justify-end">
-          <button onClick={enviar} disabled={!texto.trim() || enviando} className="btn-primario py-1">
-            Comentar
-          </button>
-        </div>
-      </div>
-
-      {cargando && <p className="text-sm text-slate-400">Cargando…</p>}
-      {!cargando && filas.length === 0 && (
-        <p className="text-center text-sm text-slate-400">Sin comentarios todavía.</p>
-      )}
-      <ul className="flex flex-col gap-3">
-        {[...filas].reverse().map((c) => {
-          const autor = c.miembro_id ? miembroPorId.get(c.miembro_id) : null;
-          const puedeBorrar = esAdmin || c.miembro_id === yo.id;
-          return (
-            <li key={c.id} className="group flex gap-2.5">
-              <Avatar nombre={autor?.nombre ?? "?"} tam={28} />
-              <div className="min-w-0 flex-1 rounded-lg bg-slate-50 px-3 py-2">
-                <div className="mb-0.5 flex items-center gap-2 text-xs text-slate-500">
-                  <span className="font-medium text-slate-700">{autor?.nombre ?? "—"}</span>
-                  <span>{formatoFechaHora(c.created_at)}</span>
-                  {puedeBorrar && (
-                    <button
-                      onClick={() => borrar(c.id)}
-                      className="ml-auto text-slate-300 opacity-0 group-hover:opacity-100 hover:text-red-600"
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  )}
-                </div>
-                <p className="text-sm whitespace-pre-wrap break-words">{c.texto}</p>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
-}
 
 // ========================================================================= Tiempo
 export function PestanaTiempo({ tarea }: { tarea: Tarea }) {

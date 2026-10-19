@@ -11,17 +11,20 @@ import {
   Building2,
   LogOut,
   UsersRound,
+  Ticket,
 } from "lucide-react";
 import clsx from "clsx";
 import type { Miembro } from "@/types/db";
 import { DatosProvider, useDatos } from "@/components/datos/DatosProvider";
 import PanelTarea from "@/components/panel/PanelTarea";
 import BarraTemporizador from "@/components/tiempo/BarraTemporizador";
+import Campana from "@/components/notificaciones/Campana";
 
 const NAV = [
   { href: "/tabla", texto: "Tabla", icono: Table2 },
   { href: "/kanban", texto: "Kanban", icono: Columns3 },
   { href: "/mis-tareas", texto: "Mis tareas", icono: UserCheck },
+  { href: "/tickets", texto: "Tickets", icono: Ticket },
   { href: "/responsables", texto: "Por responsable", icono: UsersRound },
   { href: "/dashboard", texto: "Dashboard", icono: LayoutDashboard },
 ];
@@ -64,6 +67,8 @@ export default function Shell({ yo, children }: { yo: Miembro; children: React.R
           <IndicadorEnLinea />
         </div>
         <nav className="flex flex-1 flex-col gap-0.5 px-2">
+          <Campana />
+          <div className="my-1 border-t border-slate-100" />
           {NAV.map(enlace)}
           <div className="mt-4 mb-1 hidden px-3 text-[11px] font-semibold tracking-wide text-slate-400 uppercase md:block">
             Catálogos

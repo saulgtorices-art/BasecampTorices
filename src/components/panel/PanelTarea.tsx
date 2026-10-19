@@ -10,7 +10,8 @@ import { CeldaFecha } from "@/components/ui/Celdas";
 import { COLOR_ESTATUS, COLOR_PRIORIDAD, estaVencida, formatoFechaHora } from "@/lib/ui";
 import { ESTATUS, PRIORIDADES, type Tarea, type TareaEditable } from "@/types/db";
 
-import { PestanaComentarios, PestanaHistorial, PestanaTiempo } from "./Pestanas";
+import { PestanaHistorial, PestanaTiempo } from "./Pestanas";
+import { PestanaComentarios } from "./PestanaComentarios";
 import PestanaArchivos from "./PestanaArchivos";
 
 type Pestana = "detalle" | "archivos" | "comentarios" | "tiempo" | "historial";
