@@ -19,6 +19,7 @@ import { DatosProvider, useDatos } from "@/components/datos/DatosProvider";
 import PanelTarea from "@/components/panel/PanelTarea";
 import BarraTemporizador from "@/components/tiempo/BarraTemporizador";
 import Campana from "@/components/notificaciones/Campana";
+import Avatar from "@/components/ui/Avatar";
 
 const NAV = [
   { href: "/tabla", texto: "Tabla", icono: Table2 },
@@ -60,10 +61,12 @@ export default function Shell({ yo, children }: { yo: Miembro; children: React.R
     <div className="flex h-full">
       <aside className="flex w-14 shrink-0 flex-col border-r border-slate-200 bg-white md:w-56">
         <div className="flex items-center gap-2 px-3 py-4">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-marca-600 text-sm font-bold text-white">
-            BT
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-simbolo.png" alt="Grupo Torices" width={36} height={19} className="h-auto w-9 shrink-0" />
+          <div className="hidden min-w-0 leading-tight md:block">
+            <div className="truncate font-semibold">Grupo Torices</div>
+            <div className="text-xs text-slate-500">Marketing</div>
           </div>
-          <span className="hidden font-semibold md:inline">Basecamp Torices</span>
           <IndicadorEnLinea />
         </div>
         <nav className="flex flex-1 flex-col gap-0.5 px-2">
@@ -76,12 +79,7 @@ export default function Shell({ yo, children }: { yo: Miembro; children: React.R
           {NAV_ADMIN.map(enlace)}
         </nav>
         <div className="border-t border-slate-200 p-2">
-          <div className="hidden px-2 pb-2 md:block">
-            <div className="truncate text-sm font-medium">{yo.nombre}</div>
-            <div className="truncate text-xs text-slate-500">
-              {yo.correo} · {yo.rol}
-            </div>
-          </div>
+          <MiPerfil />
           <form action="/auth/salir" method="post">
             <button className="flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-sm text-slate-600 hover:bg-slate-100">
               <LogOut size={17} />
@@ -95,6 +93,27 @@ export default function Shell({ yo, children }: { yo: Miembro; children: React.R
     <PanelTarea />
     <BarraTemporizador />
     </DatosProvider>
+  );
+}
+
+function MiPerfil() {
+  const { yo } = useDatos();
+  const ruta = usePathname();
+  return (
+    <Link
+      href="/perfil"
+      title="Mi perfil"
+      className={clsx(
+        "mb-1 flex items-center gap-2.5 rounded-md px-2 py-2",
+        ruta.startsWith("/perfil") ? "bg-marca-50" : "hover:bg-slate-100",
+      )}
+    >
+      <Avatar nombre={yo.nombre} foto={yo.foto_url} tam={32} />
+      <div className="hidden min-w-0 md:block">
+        <div className="truncate text-sm font-medium">{yo.nombre}</div>
+        <div className="truncate text-xs text-slate-500">{yo.puesto || yo.correo}</div>
+      </div>
+    </Link>
   );
 }
 
