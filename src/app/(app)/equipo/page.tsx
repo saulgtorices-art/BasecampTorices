@@ -68,10 +68,11 @@ export default function EquipoPage() {
         )}
 
         <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
-          <table className="w-full min-w-[720px] text-sm">
+          <table className="w-full min-w-[840px] text-sm">
             <thead className="bg-slate-50 text-xs text-slate-500">
               <tr>
                 <th className="px-3 py-2 text-left font-medium">Nombre</th>
+                <th className="px-3 py-2 text-left font-medium">Puesto</th>
                 <th className="px-3 py-2 text-left font-medium">Correo</th>
                 <th className="px-3 py-2 text-left font-medium">Alias (importación)</th>
                 <th className="px-3 py-2 font-medium">Rol</th>
@@ -85,7 +86,7 @@ export default function EquipoPage() {
                 <tr key={m.id} className="border-t border-slate-100">
                   <td className="px-2">
                     <div className="flex items-center gap-1">
-                      <Avatar nombre={m.nombre} />
+                      <Avatar nombre={m.nombre} foto={m.foto_url} />
                       {esAdmin ? (
                         <CeldaTexto valor={m.nombre} requerido onGuardar={(v) => v && editar(m, { nombre: v })} />
                       ) : (
@@ -93,6 +94,7 @@ export default function EquipoPage() {
                       )}
                     </div>
                   </td>
+                  <td className="px-3 text-slate-600">{m.puesto ?? <span className="text-slate-300">—</span>}</td>
                   <td className="px-2">
                     {esAdmin ? (
                       <CeldaTexto
