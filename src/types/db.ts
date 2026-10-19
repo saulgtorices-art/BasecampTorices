@@ -74,11 +74,36 @@ export type TareaEditable = Partial<
   >
 >;
 
+export interface AdjuntoComentario {
+  ruta: string;
+  nombre: string;
+  mime: string | null;
+  tamano: number;
+}
+
 export interface ComentarioTarea {
   id: string;
   tarea_id: string;
   miembro_id: string | null;
   texto: string;
+  adjuntos: AdjuntoComentario[];
+  respuesta_a: string | null;
+  menciones: string[];
+  editado_at: string | null;
+  created_at: string;
+}
+
+export type TipoNotificacion = "mencion" | "asignacion" | "estatus" | "vencida" | "ticket";
+
+export interface Notificacion {
+  id: string;
+  miembro_id: string;
+  actor_id: string | null;
+  tarea_id: string | null;
+  ticket_id: string | null;
+  tipo: TipoNotificacion;
+  texto: string;
+  leida: boolean;
   created_at: string;
 }
 
@@ -129,3 +154,38 @@ export const COLUMNAS_IMPORTACION = [
   "Comentarios",
   "Documento",
 ] as const;
+
+export const ESTADOS_TICKET = ["Nuevo", "En revisión", "Aceptado", "Rechazado", "Resuelto"] as const;
+export type EstadoTicket = (typeof ESTADOS_TICKET)[number];
+
+export const CATEGORIAS_TICKET = ["Soporte", "Bug", "Nueva función", "Contenido", "Diseño", "Otro"] as const;
+export type CategoriaTicket = (typeof CATEGORIAS_TICKET)[number];
+
+export interface Ticket {
+  id: string;
+  numero: number;
+  titulo: string;
+  descripcion: string;
+  cliente_id: string | null;
+  categoria: CategoriaTicket;
+  urgencia: Prioridad;
+  estado: EstadoTicket;
+  solicitante_id: string | null;
+  asignado_id: string | null;
+  tarea_id: string | null;
+  adjuntos: AdjuntoComentario[];
+  motivo_rechazo: string | null;
+  vence_at: string | null;
+  primera_respuesta_at: string | null;
+  resuelto_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ComentarioTicket {
+  id: string;
+  ticket_id: string;
+  miembro_id: string | null;
+  texto: string;
+  created_at: string;
+}
