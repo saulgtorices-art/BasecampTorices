@@ -255,7 +255,7 @@ export default function PestanaArchivos({ tarea }: { tarea: Tarea }) {
                   {a.nombre}
                 </button>
                 <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                  <Avatar nombre={autor?.nombre ?? "?"} tam={14} />
+                  <Avatar nombre={autor?.nombre ?? "?"} foto={autor?.foto_url} tam={14} />
                   <span>{autor?.nombre ?? "—"}</span>
                   <span>· {formatoFechaHora(a.created_at)}</span>
                   {a.tipo === "archivo" && a.tamano != null && <span>· {formatoTamano(a.tamano)}</span>}

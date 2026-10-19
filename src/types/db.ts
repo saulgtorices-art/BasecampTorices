@@ -31,6 +31,9 @@ export interface Miembro {
   rol: Rol;
   alias: string[];
   activo: boolean;
+  foto_url: string | null;
+  puesto: string | null;
+  telefono: string | null;
   created_at: string;
 }
 

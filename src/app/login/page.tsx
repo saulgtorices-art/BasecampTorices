@@ -19,12 +19,11 @@ export default async function LoginPage({
     <main className="flex min-h-full items-center justify-center p-6">
       <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
         <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-marca-600 text-lg font-bold text-white">
-            BT
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-simbolo.png" alt="Grupo Torices" width={64} height={34} className="h-auto w-16 shrink-0" />
           <div>
-            <h1 className="text-lg font-semibold">Basecamp Torices</h1>
-            <p className="text-sm text-slate-500">Desarrollo Web · Grupo Torices</p>
+            <h1 className="text-lg font-semibold">Grupo Torices</h1>
+            <p className="text-sm text-slate-500">Marketing</p>
           </div>
         </div>
         {mensaje && (

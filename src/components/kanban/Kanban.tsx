@@ -213,7 +213,7 @@ function Tarjeta({ tarea: t, flotando }: { tarea: Tarea; flotando?: boolean }) {
         </div>
       )}
       <div className="flex items-center gap-2 text-xs text-slate-500">
-        <Avatar nombre={responsable?.nombre} tam={22} />
+        <Avatar nombre={responsable?.nombre} foto={responsable?.foto_url} tam={22} />
         {t.fecha_entrega && (
           <span className={clsx("flex items-center gap-1", vencida && "font-semibold text-red-600")}>
             <CalendarDays size={13} /> {formatoFecha(t.fecha_entrega)}

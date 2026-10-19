@@ -28,7 +28,7 @@ export default function SelectorMiembro({
         onClick={() => setAbierto((a) => !a)}
         className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm hover:bg-slate-100"
       >
-        <Avatar nombre={actual?.nombre} />
+        <Avatar nombre={actual?.nombre} foto={actual?.foto_url} />
         {conNombre && (
           <span className={clsx("truncate", !actual && "text-slate-400")}>
             {actual?.nombre ?? "Sin asignar"}
@@ -52,7 +52,7 @@ export default function SelectorMiembro({
                   m.id === valor && "bg-marca-50",
                 )}
               >
-                <Avatar nombre={m.nombre} />
+                <Avatar nombre={m.nombre} foto={m.foto_url} />
                 <span className="truncate">{m.nombre}</span>
               </button>
             ))}

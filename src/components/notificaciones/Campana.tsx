@@ -76,7 +76,7 @@ export default function Campana() {
             const n = p.new as Notificacion;
             setLista((l) => [n, ...l.filter((x) => x.id !== n.id)].slice(0, 50));
             if (document.hidden && typeof Notification !== "undefined" && Notification.permission === "granted") {
-              const aviso = new Notification("Basecamp Torices", { body: n.texto, tag: n.id, icon: "/favicon.ico" });
+              const aviso = new Notification("Grupo Torices", { body: n.texto, tag: n.id, icon: "/logo-simbolo.png" });
               aviso.onclick = () => {
                 window.focus();
                 if (n.ticket_id) window.location.assign(`/tickets?ticket=${n.ticket_id}`);
@@ -191,7 +191,7 @@ export default function Campana() {
                     )}
                   >
                     <div className="relative shrink-0">
-                      <Avatar nombre={actor?.nombre ?? "Sistema"} tam={32} />
+                      <Avatar nombre={actor?.nombre ?? "Sistema"} foto={actor?.foto_url} tam={32} />
                       <span
                         className={clsx(
                           "absolute -right-1 -bottom-1 flex h-4.5 w-4.5 items-center justify-center rounded-full p-0.5 text-white ring-2 ring-white",

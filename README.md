@@ -1,6 +1,6 @@
-# Basecamp Torices
+# Grupo Torices · Marketing
 
-Tablero de tareas estilo Monday para el equipo de Desarrollo Web de Grupo Torices.
+Tablero de tareas estilo Monday para el equipo de Marketing de Grupo Torices.
 
 **Stack:** Next.js (App Router) + TypeScript + Tailwind · Supabase (Postgres, Auth, Realtime) · Vercel.
 
