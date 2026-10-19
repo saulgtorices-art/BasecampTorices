@@ -210,7 +210,7 @@ function Contenido() {
                       {sla.texto}
                     </span>
                     <span className="flex items-center gap-1 text-xs text-slate-500">
-                      <Avatar nombre={asignado?.nombre} tam={18} />
+                      <Avatar nombre={asignado?.nombre} foto={asignado?.foto_url} tam={18} />
                       {asignado?.nombre ?? "Sin asignar"}
                     </span>
                   </div>
