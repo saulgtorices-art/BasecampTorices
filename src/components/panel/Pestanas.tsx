@@ -267,6 +267,7 @@ const NOMBRES_CAMPO: Record<string, string> = {
   comentarios: "Notas",
   documento_url: "Documento",
   proyecto: "Proyecto",
+  adjunto: "Archivos",
 };
 
 function valorLegible(campo: string, v: string | null) {
@@ -298,6 +299,16 @@ export function PestanaHistorial({ tarea }: { tarea: Tarea }) {
               <b>{quien ?? "—"}</b>{" "}
               {h.campo === "creada" ? (
                 "creó la tarea"
+              ) : h.campo === "adjunto" ? (
+                h.valor_nuevo ? (
+                  <>
+                    adjuntó <b>{h.valor_nuevo}</b>
+                  </>
+                ) : (
+                  <>
+                    quitó <span className="text-slate-500 line-through">{h.valor_anterior}</span>
+                  </>
+                )
               ) : (
                 <>
                   cambió <b>{NOMBRES_CAMPO[h.campo] ?? h.campo}</b>:{" "}

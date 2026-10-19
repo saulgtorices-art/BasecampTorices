@@ -82,6 +82,19 @@ export interface ComentarioTarea {
   created_at: string;
 }
 
+export interface AdjuntoTarea {
+  id: string;
+  tarea_id: string;
+  miembro_id: string | null;
+  tipo: "archivo" | "link";
+  nombre: string;
+  ruta: string | null;
+  url: string | null;
+  mime: string | null;
+  tamano: number | null;
+  created_at: string;
+}
+
 export interface RegistroTiempo {
   id: string;
   tarea_id: string;

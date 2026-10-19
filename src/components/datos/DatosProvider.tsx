@@ -259,6 +259,13 @@ export function DatosProvider({ yo, children }: { yo: Miembro; children: React.R
       }
       setTareas((ts) => ts.filter((t) => t.id !== id));
       abrirTarea((actual) => (actual === id ? null : actual));
+      // Limpia los archivos adjuntos de la tarea en Storage (sin bloquear).
+      void supabase.storage
+        .from("adjuntos")
+        .list(id, { limit: 1000 })
+        .then(({ data }) => {
+          if (data?.length) return supabase.storage.from("adjuntos").remove(data.map((f) => `${id}/${f.name}`));
+        });
       avisar("Tarea eliminada", "ok");
       return true;
     },

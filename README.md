@@ -159,6 +159,7 @@ supabase/
 - Captura manual: fecha, horas y minutos.
 - Panel → Historial: cada cambio aparece con quién, cuándo, el valor anterior y el nuevo.
 - Panel → Comentarios: escribe y comprueba que el otro usuario lo ve.
+- Panel → Archivos: sube un PDF/imagen (o arrástralo), agrega un link, ábrelo, descárgalo y quítalo. Debe aparecer en Historial.
 
 **5. Dashboard y CSV**
 - Dashboard: cambia de mes y revisa las gráficas y las vencidas.
@@ -171,5 +172,6 @@ supabase/
 
 - **Realtime**: la migración agrega `tareas`, `comentarios_tarea`, `registros_tiempo`, `clientes` y `miembros` a la publicación `supabase_realtime`. Si no ves cambios en vivo, revisa *Database → Publications* en Supabase.
 - **Borrados en vivo**: Supabase no filtra eventos DELETE por columna. Por eso un comentario borrado por otra persona desaparece hasta que recargas el panel; las tareas borradas sí desaparecen al instante.
+- **Archivos adjuntos**: la migración `20261019000001_adjuntos_tarea.sql` crea la tabla `adjuntos_tarea` y el bucket privado `adjuntos` de Storage (50 MB por archivo). Los archivos se guardan como `{tarea_id}/{uuid}-{nombre}` y se abren con URLs firmadas de 10 minutos. Cualquier miembro sube y ve; cada quien quita lo suyo (admin, todo). Al borrar una tarea se limpian sus archivos de Storage.
 - **Zona horaria**: "hoy", las vencidas y los meses se calculan en `America/Mexico_City`.
 - `SUPABASE_SERVICE_ROLE_KEY` hoy solo la usa el helper `supabaseAdmin()`, que queda listo para la futura importación masiva.

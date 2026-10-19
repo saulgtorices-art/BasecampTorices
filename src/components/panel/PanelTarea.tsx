@@ -11,11 +11,13 @@ import { COLOR_ESTATUS, COLOR_PRIORIDAD, estaVencida, formatoFechaHora } from "@
 import { ESTATUS, PRIORIDADES, type Tarea, type TareaEditable } from "@/types/db";
 
 import { PestanaComentarios, PestanaHistorial, PestanaTiempo } from "./Pestanas";
+import PestanaArchivos from "./PestanaArchivos";
 
-type Pestana = "detalle" | "comentarios" | "tiempo" | "historial";
+type Pestana = "detalle" | "archivos" | "comentarios" | "tiempo" | "historial";
 
 const PESTANAS: { clave: Pestana; texto: string }[] = [
   { clave: "detalle", texto: "Detalle" },
+  { clave: "archivos", texto: "Archivos" },
   { clave: "comentarios", texto: "Comentarios" },
   { clave: "tiempo", texto: "Tiempo" },
   { clave: "historial", texto: "Historial" },
@@ -69,6 +71,7 @@ export default function PanelTarea() {
             </nav>
             <div className="flex-1 overflow-y-auto p-5">
               {pestana === "detalle" && <Detalle tarea={tarea} />}
+              {pestana === "archivos" && <PestanaArchivos key={tarea.id} tarea={tarea} />}
               {pestana === "comentarios" && <PestanaComentarios key={tarea.id} tarea={tarea} />}
               {pestana === "tiempo" && <PestanaTiempo key={tarea.id} tarea={tarea} />}
               {pestana === "historial" && <PestanaHistorial key={tarea.id} tarea={tarea} />}
@@ -221,7 +224,7 @@ function Detalle({ tarea }: { tarea: Tarea }) {
           onGuardar={(v) => guardar({ proyecto: v })}
         />
       </Fila>
-      <Fila etiqueta="Documento">
+      <Fila etiqueta="Documento principal">
         <div className="flex items-center gap-2">
           <CampoTexto
             valor={tarea.documento_url}
