@@ -138,7 +138,7 @@ export function PestanaTiempo({ tarea }: { tarea: Tarea }) {
             const puede = esAdmin || r.miembro_id === yo.id;
             return (
               <li key={r.id} className="group flex items-center gap-2.5 px-3 py-2 text-sm">
-                <Avatar nombre={quien?.nombre} tam={22} />
+                <Avatar nombre={quien?.nombre} foto={quien?.foto_url} tam={22} />
                 <div className="min-w-0 flex-1">
                   <div>
                     <span className="font-medium">{r.fin ? formatoMinutos(r.minutos) : "En curso…"}</span>

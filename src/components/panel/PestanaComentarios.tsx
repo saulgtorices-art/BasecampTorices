@@ -283,7 +283,7 @@ export function PestanaComentarios({ tarea }: { tarea: Tarea }) {
 
           return (
             <div key={c.id} className={clsx("group flex gap-2", mio && "flex-row-reverse", agrupado && "-mt-2")}>
-              <div className="w-7 shrink-0">{!agrupado && <Avatar nombre={autor?.nombre ?? "?"} tam={28} />}</div>
+              <div className="w-7 shrink-0">{!agrupado && <Avatar nombre={autor?.nombre ?? "?"} foto={autor?.foto_url} tam={28} />}</div>
               <div className={clsx("flex min-w-0 max-w-[85%] flex-col", mio && "items-end")}>
                 {!agrupado && (
                   <div className={clsx("mb-0.5 flex items-center gap-2 text-xs text-slate-500", mio && "flex-row-reverse")}>
@@ -438,7 +438,7 @@ export function PestanaComentarios({ tarea }: { tarea: Tarea }) {
                       i === indiceMencion ? "bg-marca-50 text-marca-700" : "hover:bg-slate-50",
                     )}
                   >
-                    <Avatar nombre={m.nombre} tam={20} />
+                    <Avatar nombre={m.nombre} foto={m.foto_url} tam={20} />
                     {m.nombre}
                   </button>
                 </li>
