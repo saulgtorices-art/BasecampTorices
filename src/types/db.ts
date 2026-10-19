@@ -1,3 +1,4 @@
+
 // Tipos del modelo. Si cambias el esquema, actualiza este archivo
 // (o reemplázalo con `npx supabase gen types typescript`).
 
@@ -79,6 +80,19 @@ export interface ComentarioTarea {
   tarea_id: string;
   miembro_id: string | null;
   texto: string;
+  created_at: string;
+}
+
+export interface AdjuntoTarea {
+  id: string;
+  tarea_id: string;
+  miembro_id: string | null;
+  tipo: "archivo" | "link";
+  nombre: string;
+  ruta: string | null;
+  url: string | null;
+  mime: string | null;
+  tamano: number | null;
   created_at: string;
 }
 
