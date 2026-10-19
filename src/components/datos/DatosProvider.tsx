@@ -260,12 +260,15 @@ export function DatosProvider({ yo, children }: { yo: Miembro; children: React.R
       setTareas((ts) => ts.filter((t) => t.id !== id));
       abrirTarea((actual) => (actual === id ? null : actual));
       // Limpia los archivos adjuntos de la tarea en Storage (sin bloquear).
-      void supabase.storage
-        .from("adjuntos")
-        .list(id, { limit: 1000 })
-        .then(({ data }) => {
-          if (data?.length) return supabase.storage.from("adjuntos").remove(data.map((f) => `${id}/${f.name}`));
-        });
+      // Incluye la carpeta de evidencias de comentarios ({id}/comentarios).
+      void (async () => {
+        for (const carpeta of [id, `${id}/comentarios`]) {
+          const { data } = await supabase.storage.from("adjuntos").list(carpeta, { limit: 1000 });
+          const archivos = (data ?? []).filter((f) => f.id);
+          if (archivos.length)
+            await supabase.storage.from("adjuntos").remove(archivos.map((f) => `${carpeta}/${f.name}`));
+        }
+      })();
       avisar("Tarea eliminada", "ok");
       return true;
     },
