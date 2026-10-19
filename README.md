@@ -158,7 +158,9 @@ supabase/
 - Panel → Tiempo: *Iniciar*. Aparece la barra flotante con el cronómetro; *Detener* guarda los minutos.
 - Captura manual: fecha, horas y minutos.
 - Panel → Historial: cada cambio aparece con quién, cuándo, el valor anterior y el nuevo.
-- Panel → Comentarios: escribe y comprueba que el otro usuario lo ve.
+- Panel → Comentarios (chat): escribe, pega una captura con Ctrl+V, arrastra una imagen, menciona con @ y responde un mensaje. El otro usuario lo ve al instante.
+- Tickets: levanta uno como miembro (con captura pegada); como admin conviértelo en tarea, termínala y revisa que el ticket quede *Resuelto* y que a quien lo pidió le llegue el aviso.
+- Notificaciones: menciona a alguien, asígnale una tarea o cámbiale el estatus; debe ver la campanita con contador y, si activó los avisos del navegador, una notificación aunque esté en otra pestaña.
 - Panel → Archivos: sube un PDF/imagen (o arrástralo), agrega un link, ábrelo, descárgalo y quítalo. Debe aparecer en Historial.
 
 **5. Dashboard y CSV**
@@ -173,5 +175,7 @@ supabase/
 - **Realtime**: la migración agrega `tareas`, `comentarios_tarea`, `registros_tiempo`, `clientes` y `miembros` a la publicación `supabase_realtime`. Si no ves cambios en vivo, revisa *Database → Publications* en Supabase.
 - **Borrados en vivo**: Supabase no filtra eventos DELETE por columna. Por eso un comentario borrado por otra persona desaparece hasta que recargas el panel; las tareas borradas sí desaparecen al instante.
 - **Archivos adjuntos**: la migración `20261019000001_adjuntos_tarea.sql` crea la tabla `adjuntos_tarea` y el bucket privado `adjuntos` de Storage (50 MB por archivo). Los archivos se guardan como `{tarea_id}/{uuid}-{nombre}` y se abren con URLs firmadas de 10 minutos. Cualquier miembro sube y ve; cada quien quita lo suyo (admin, todo). Al borrar una tarea se limpian sus archivos de Storage.
+- **Chat y notificaciones**: la migración `20261020000001_chat_notificaciones.sql` agrega a `comentarios_tarea` las columnas `adjuntos` (evidencias en `{tarea_id}/comentarios/` del bucket `adjuntos`), `respuesta_a` y `menciones`, y crea `notificaciones`. Los avisos los generan triggers (mención, asignación, cambio de estatus) y la función `generar_avisos_vencidas()`, que la app llama al cargar (un aviso por tarea vencida, sin cron).
+- **Tickets**: la migración `20261021000001_tickets.sql` crea `tickets` y `comentarios_ticket`. Urgencia con SLA (Urgente 4 h, Alta 1 día, Media 3 días, Baja 1 semana). Admin o el asignado lo convierte en tarea con `convertir_ticket_en_tarea()` (hereda título, urgencia, descripción y evidencias); al terminar la tarea el ticket pasa a *Resuelto* solo, y si se reabre vuelve a *Aceptado*. Avisa a admins del ticket nuevo y a quien lo pidió de cada cambio.
 - **Zona horaria**: "hoy", las vencidas y los meses se calculan en `America/Mexico_City`.
 - `SUPABASE_SERVICE_ROLE_KEY` hoy solo la usa el helper `supabaseAdmin()`, que queda listo para la futura importación masiva.
