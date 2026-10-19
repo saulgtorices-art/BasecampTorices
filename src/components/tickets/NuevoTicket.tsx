@@ -5,6 +5,7 @@ import clsx from "clsx";
 import { FileText, Loader2, Paperclip, Ticket as IconoTicket, X } from "lucide-react";
 import { supabaseNavegador } from "@/lib/supabase/client";
 import { useDatos } from "@/components/datos/DatosProvider";
+import Portal from "@/components/ui/Portal";
 import { COLOR_PRIORIDAD } from "@/lib/ui";
 import { CATEGORIAS_TICKET, PRIORIDADES, type AdjuntoComentario, type CategoriaTicket, type Prioridad } from "@/types/db";
 import { DESCRIPCION_URGENCIA, SLA_TEXTO } from "./util";
@@ -94,6 +95,7 @@ export default function NuevoTicket({ onCreado }: { onCreado?: (id: string) => v
         <IconoTicket size={16} /> Levantar ticket
       </button>
       {abierto && (
+        <Portal>
         <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-slate-900/30 p-4 pt-[6vh]">
           <form
             onSubmit={crear}
@@ -248,6 +250,7 @@ export default function NuevoTicket({ onCreado }: { onCreado?: (id: string) => v
             </div>
           </form>
         </div>
+        </Portal>
       )}
     </>
   );
