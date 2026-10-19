@@ -318,7 +318,7 @@ export default function DetalleTicket({ ticket, onCerrar }: { ticket: Ticket; on
           <dl className="mb-4 grid grid-cols-[110px_1fr] items-center gap-x-3 gap-y-2 text-sm">
             <dt className="text-slate-500">Pidió</dt>
             <dd className="flex items-center gap-2">
-              <Avatar nombre={solicitante?.nombre} tam={20} />
+              <Avatar nombre={solicitante?.nombre} foto={solicitante?.foto_url} tam={20} />
               {solicitante?.nombre ?? "—"} <span className="text-xs text-slate-400">· {formatoFechaHora(ticket.created_at)}</span>
             </dd>
 
@@ -339,7 +339,11 @@ export default function DetalleTicket({ ticket, onCerrar }: { ticket: Ticket; on
                 </select>
               ) : (
                 <span className="flex items-center gap-2">
-                  <Avatar nombre={ticket.asignado_id ? miembroPorId.get(ticket.asignado_id)?.nombre : null} tam={20} />
+                  <Avatar
+                    nombre={ticket.asignado_id ? miembroPorId.get(ticket.asignado_id)?.nombre : null}
+                    foto={ticket.asignado_id ? miembroPorId.get(ticket.asignado_id)?.foto_url : null}
+                    tam={20}
+                  />
                   {ticket.asignado_id ? (miembroPorId.get(ticket.asignado_id)?.nombre ?? "—") : "Sin asignar"}
                 </span>
               )}
@@ -414,7 +418,7 @@ export default function DetalleTicket({ ticket, onCerrar }: { ticket: Ticket; on
               const autor = c.miembro_id ? miembroPorId.get(c.miembro_id) : null;
               return (
                 <li key={c.id} className="flex gap-2">
-                  <Avatar nombre={autor?.nombre ?? "?"} tam={24} />
+                  <Avatar nombre={autor?.nombre ?? "?"} foto={autor?.foto_url} tam={24} />
                   <div className="min-w-0 flex-1 rounded-lg bg-slate-50 px-3 py-1.5">
                     <div className="text-xs text-slate-500">
                       <b className="text-slate-700">{autor?.nombre ?? "—"}</b> · {formatoFechaHora(c.created_at)}
