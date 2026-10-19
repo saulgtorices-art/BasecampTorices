@@ -38,6 +38,13 @@ interface Datos {
   borrarCliente: (id: string) => Promise<boolean>;
   guardarMiembro: (m: Partial<Miembro> & { nombre: string; correo: string }) => Promise<boolean>;
   borrarMiembro: (id: string) => Promise<boolean>;
+  /** Cada usuario edita su propio perfil (nombre, puesto, teléfono y foto). */
+  guardarMiPerfil: (p: {
+    nombre: string;
+    puesto: string | null;
+    telefono: string | null;
+    foto_url: string | null;
+  }) => Promise<boolean>;
 
   /** Temporizador corriendo del usuario actual (si hay). */
   temporizador: RegistroTiempo | null;
@@ -343,6 +350,27 @@ export function DatosProvider({ yo, children }: { yo: Miembro; children: React.R
     [supabase, avisar],
   );
 
+  const guardarMiPerfil: Datos["guardarMiPerfil"] = useCallback(
+    async (p) => {
+      const { data, error } = await supabase.rpc("actualizar_mi_perfil", {
+        p_nombre: p.nombre,
+        p_puesto: p.puesto,
+        p_telefono: p.telefono,
+        p_foto_url: p.foto_url,
+      });
+      if (error) {
+        avisar(error.message);
+        return false;
+      }
+      const m = data as Miembro;
+      setMiembros((ms) =>
+        [...ms.filter((x) => x.id !== m.id), m].sort((a, b) => a.nombre.localeCompare(b.nombre)),
+      );
+      return true;
+    },
+    [supabase, avisar],
+  );
+
   // --------------------------------------------------------------- derivados
   const clientePorId = useMemo(() => new Map(clientes.map((c) => [c.id, c])), [clientes]);
   const miembroPorId = useMemo(() => new Map(miembros.map((m) => [m.id, m])), [miembros]);
@@ -354,8 +382,11 @@ export function DatosProvider({ yo, children }: { yo: Miembro; children: React.R
     [tareas],
   );
 
+  // Versión más reciente de mi fila (refleja cambios de perfil sin recargar).
+  const yoActual = miembroPorId.get(yo.id) ?? yo;
+
   const valor: Datos = {
-    yo,
+    yo: yoActual,
     esAdmin: yo.rol === "admin",
     cargando,
     enLinea,
@@ -374,6 +405,7 @@ export function DatosProvider({ yo, children }: { yo: Miembro; children: React.R
     borrarCliente,
     guardarMiembro,
     borrarMiembro,
+    guardarMiPerfil,
     temporizador,
     iniciarTemporizador,
     detenerTemporizador,
