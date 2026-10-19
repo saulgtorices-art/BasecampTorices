@@ -1,4 +1,3 @@
-
 // Tipos del modelo. Si cambias el esquema, actualiza este archivo
 // (o reemplázalo con `npx supabase gen types typescript`).
 
