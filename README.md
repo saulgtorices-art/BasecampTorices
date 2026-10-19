@@ -1,4 +1,3 @@
-
 # Basecamp Torices
 
 Tablero de tareas estilo Monday para el equipo de Desarrollo Web de Grupo Torices.
