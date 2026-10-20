@@ -34,6 +34,16 @@ export interface Miembro {
   foto_url: string | null;
   puesto: string | null;
   telefono: string | null;
+  celula_id: string | null;
+  created_at: string;
+}
+
+export interface Celula {
+  id: string;
+  numero: number;
+  nombre: string;
+  area: string;
+  lider_id: string | null;
   created_at: string;
 }
 

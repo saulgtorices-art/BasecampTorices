@@ -9,7 +9,7 @@ import { CeldaTexto } from "@/components/ui/Celdas";
 import type { Miembro, Rol } from "@/types/db";
 
 export default function EquipoPage() {
-  const { miembros, guardarMiembro, borrarMiembro, esAdmin, yo } = useDatos();
+  const { miembros, guardarMiembro, borrarMiembro, esAdmin, yo, celulas, celulaPorId, guardarCelula } = useDatos();
   const [nombre, setNombre] = useState("");
   const [correo, setCorreo] = useState("");
   const [rol, setRol] = useState<Rol>("miembro");
@@ -38,7 +38,7 @@ export default function EquipoPage() {
             : "Solo un administrador puede modificar el equipo."
         }
       />
-      <div className="max-w-4xl p-4 md:p-6">
+      <div className="max-w-6xl p-4 md:p-6">
         {esAdmin && (
           <form
             onSubmit={agregar}
@@ -67,13 +67,67 @@ export default function EquipoPage() {
           </form>
         )}
 
+        {celulas.length > 0 && (
+          <section className="mb-6">
+            <h2 className="mb-2 text-sm font-semibold text-slate-700">Células</h2>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {celulas.map((c) => {
+                const integrantes = miembros.filter((m) => m.celula_id === c.id && m.activo);
+                return (
+                  <div key={c.id} className="rounded-lg border border-slate-200 bg-white p-3">
+                    <div className="mb-2 flex items-baseline justify-between gap-2">
+                      <div className="truncate text-sm font-medium">
+                        {c.nombre} <span className="font-normal text-slate-500">· {c.area}</span>
+                      </div>
+                      <span className="shrink-0 text-xs text-slate-400">{integrantes.length} integrantes</span>
+                    </div>
+                    <label className="flex items-center gap-2 text-xs text-slate-500">
+                      Líder
+                      <select
+                        value={c.lider_id ?? ""}
+                        disabled={!esAdmin}
+                        onChange={async (e) => {
+                          const id = e.target.value || null;
+                          const ok = await guardarCelula(c.id, { lider_id: id });
+                          // El líder entra a la célula y queda como admin para ver su tablero.
+                          const m = id ? miembros.find((x) => x.id === id) : null;
+                          if (ok && m && (m.celula_id !== c.id || m.rol !== "admin"))
+                            await editar(m, { celula_id: c.id, rol: "admin" });
+                        }}
+                        className="campo flex-1 py-1"
+                      >
+                        <option value="">Sin líder</option>
+                        {miembros
+                          .filter((m) => m.activo)
+                          .map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.nombre}
+                            </option>
+                          ))}
+                      </select>
+                    </label>
+                    {integrantes.length > 0 && (
+                      <div className="mt-2 flex -space-x-1.5">
+                        {integrantes.map((m) => (
+                          <Avatar key={m.id} nombre={m.nombre} foto={m.foto_url} className="ring-2 ring-white" />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
-          <table className="w-full min-w-[840px] text-sm">
+          <table className="w-full min-w-[960px] text-sm">
             <thead className="bg-slate-50 text-xs text-slate-500">
               <tr>
                 <th className="px-3 py-2 text-left font-medium">Nombre</th>
                 <th className="px-3 py-2 text-left font-medium">Puesto</th>
                 <th className="px-3 py-2 text-left font-medium">Correo</th>
+                <th className="px-3 py-2 text-left font-medium">Célula</th>
                 <th className="px-3 py-2 text-left font-medium">Alias (importación)</th>
                 <th className="px-3 py-2 font-medium">Rol</th>
                 <th className="px-3 py-2 font-medium">Activo</th>
@@ -104,6 +158,26 @@ export default function EquipoPage() {
                       />
                     ) : (
                       <span className="px-2 text-slate-600">{m.correo}</span>
+                    )}
+                  </td>
+                  <td className="px-2">
+                    {esAdmin ? (
+                      <select
+                        value={m.celula_id ?? ""}
+                        onChange={(e) => editar(m, { celula_id: e.target.value || null })}
+                        className="rounded bg-transparent px-1 py-1 text-sm"
+                      >
+                        <option value="">—</option>
+                        {celulas.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.nombre} · {c.area}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="px-2 text-slate-600">
+                        {m.celula_id ? celulaPorId.get(m.celula_id)?.nombre : "—"}
+                      </span>
                     )}
                   </td>
                   <td className="px-2">
