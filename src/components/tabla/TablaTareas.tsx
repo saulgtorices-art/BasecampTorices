@@ -8,9 +8,9 @@ import EtiquetaSelect from "@/components/ui/EtiquetaSelect";
 import SelectorMiembro from "@/components/ui/SelectorMiembro";
 import { CeldaFecha, CeldaTexto } from "@/components/ui/Celdas";
 import { COLOR_ESTATUS, COLOR_PRIORIDAD, colorGrupo, estaVencida, formatoFecha } from "@/lib/ui";
-import { ESTATUS, PRIORIDADES, type Tarea, type TareaEditable } from "@/types/db";
+import { ESTATUS, PRIORIDADES, type Miembro, type Tarea, type TareaEditable } from "@/types/db";
 
-export type Agrupacion = "cliente" | "responsable";
+export type Agrupacion = "cliente" | "responsable" | "estatus" | "prioridad";
 
 interface Grupo {
   clave: string;
@@ -29,19 +29,30 @@ export default function TablaTareas({
   agruparPor = "cliente",
   mostrarGruposVacios = false,
   baseNueva = SIN_BASE,
+  miembrosGrupo,
 }: {
   tareas: Tarea[];
   agruparPor?: Agrupacion;
   mostrarGruposVacios?: boolean;
   baseNueva?: TareaEditable;
+  /** Al agrupar por responsable, limita los grupos a estas personas (ej. una célula). */
+  miembrosGrupo?: Miembro[];
 }) {
-  const { clientes, miembros, clientePorId, cargando } = useDatos();
+  const { clientes, miembros: todos, clientePorId, cargando } = useDatos();
+  const miembros = miembrosGrupo ?? todos;
   const [colapsados, setColapsados] = useState<Set<string>>(new Set());
 
   const grupos = useMemo<Grupo[]>(() => {
     const mapa = new Map<string, Tarea[]>();
     for (const t of tareas) {
-      const k = agruparPor === "cliente" ? t.cliente_id : (t.responsable_id ?? SIN_ASIGNAR);
+      const k =
+        agruparPor === "cliente"
+          ? t.cliente_id
+          : agruparPor === "estatus"
+            ? t.estatus
+            : agruparPor === "prioridad"
+              ? t.prioridad
+              : (t.responsable_id ?? SIN_ASIGNAR);
       if (!mapa.has(k)) mapa.set(k, []);
       mapa.get(k)!.push(t);
     }
@@ -58,6 +69,23 @@ export default function TablaTareas({
           base: { ...baseNueva, cliente_id: c.id },
         });
       }
+    } else if (agruparPor === "estatus" || agruparPor === "prioridad") {
+      const valores = agruparPor === "estatus" ? ESTATUS : PRIORIDADES;
+      const colores: Record<string, string> = agruparPor === "estatus" ? COLOR_ESTATUS : COLOR_PRIORIDAD;
+      for (const v of valores) {
+        const ts = mapa.get(v);
+        if (!ts && !mostrarGruposVacios) continue;
+        lista.push({
+          clave: v,
+          titulo: v,
+          color: colores[v],
+          tareas: ts ?? [],
+          base:
+            agruparPor === "estatus"
+              ? { ...baseNueva, estatus: v as Tarea["estatus"] }
+              : { ...baseNueva, prioridad: v as Tarea["prioridad"] },
+        });
+      }
     } else {
       for (const m of miembros) {
         const ts = mapa.get(m.id);
@@ -68,6 +96,18 @@ export default function TablaTareas({
           color: colorGrupo(m.nombre),
           tareas: ts ?? [],
           base: { ...baseNueva, responsable_id: m.id },
+        });
+      }
+      // Tareas de personas fuera de la lista (si se limitó) también se muestran.
+      for (const [k, ts] of mapa) {
+        if (k === SIN_ASIGNAR || lista.some((g) => g.clave === k)) continue;
+        const m = todos.find((x) => x.id === k);
+        lista.push({
+          clave: k,
+          titulo: m?.nombre ?? "—",
+          color: colorGrupo(m?.nombre ?? k),
+          tareas: ts,
+          base: { ...baseNueva, responsable_id: k },
         });
       }
       const sin = mapa.get(SIN_ASIGNAR);
@@ -82,7 +122,7 @@ export default function TablaTareas({
     }
     for (const g of lista) g.tareas.sort((a, b) => a.posicion - b.posicion);
     return lista;
-  }, [tareas, agruparPor, clientes, miembros, mostrarGruposVacios, baseNueva]);
+  }, [tareas, agruparPor, clientes, miembros, todos, mostrarGruposVacios, baseNueva]);
 
   if (cargando) return <div className="p-8 text-sm text-slate-500">Cargando tareas…</div>;
 
@@ -144,7 +184,7 @@ function GrupoTabla({
 }) {
   const terminadas = grupo.tareas.filter((t) => t.estatus === "Terminado").length;
   const columnas = COLUMNAS.map((c) =>
-    c.clave === "grupo2" ? { ...c, texto: agruparPor === "cliente" ? "Responsable" : "Cliente" } : c,
+    c.clave === "grupo2" ? { ...c, texto: agruparPor === "responsable" ? "Cliente" : "Responsable" } : c,
   );
   const anchoTotal = 36 + columnas.reduce((s, c) => s + c.ancho, 0);
 
@@ -185,7 +225,7 @@ function GrupoTabla({
               {grupo.tareas.map((t) => (
                 <FilaTarea key={t.id} tarea={t} color={grupo.color} agruparPor={agruparPor} />
               ))}
-              <FilaAgregar grupo={grupo} agruparPor={agruparPor} columnas={columnas.length} />
+              <FilaAgregar grupo={grupo} columnas={columnas.length} />
             </tbody>
           </table>
           <BarraEstatus tareas={grupo.tareas} />
@@ -233,7 +273,7 @@ function FilaTarea({ tarea: t, color, agruparPor }: { tarea: Tarea; color: strin
         </div>
       </td>
       <td className="border-l border-slate-100">
-        {agruparPor === "cliente" ? (
+        {agruparPor !== "responsable" ? (
           <SelectorMiembro valor={t.responsable_id} onCambiar={(v) => guardar({ responsable_id: v })} />
         ) : (
           <select
@@ -316,15 +356,7 @@ function FilaTarea({ tarea: t, color, agruparPor }: { tarea: Tarea; color: strin
   );
 }
 
-function FilaAgregar({
-  grupo,
-  agruparPor,
-  columnas,
-}: {
-  grupo: Grupo;
-  agruparPor: Agrupacion;
-  columnas: number;
-}) {
+function FilaAgregar({ grupo, columnas }: { grupo: Grupo; columnas: number }) {
   const { crearTarea, clientes } = useDatos();
   const [titulo, setTitulo] = useState("");
   const [clienteId, setClienteId] = useState("");
@@ -355,7 +387,7 @@ function FilaAgregar({
             className="celda-input max-w-sm text-sm"
             disabled={guardando}
           />
-          {agruparPor === "responsable" && !grupo.base.cliente_id && (
+          {!grupo.base.cliente_id && (
             <select
               value={clienteId}
               onChange={(e) => setClienteId(e.target.value)}
