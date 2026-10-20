@@ -12,6 +12,7 @@ import {
   LogOut,
   UsersRound,
   Ticket,
+  Network,
 } from "lucide-react";
 import clsx from "clsx";
 import type { Miembro } from "@/types/db";
@@ -29,6 +30,9 @@ const NAV = [
   { href: "/responsables", texto: "Por responsable", icono: UsersRound },
   { href: "/dashboard", texto: "Dashboard", icono: LayoutDashboard },
 ];
+
+// Solo coordinadores (admin): dashboard de su célula.
+const NAV_LIDER = [{ href: "/mi-celula", texto: "Mi célula", icono: Network }];
 
 const NAV_ADMIN = [
   { href: "/clientes", texto: "Clientes", icono: Building2 },
@@ -73,6 +77,7 @@ export default function Shell({ yo, children }: { yo: Miembro; children: React.R
           <Campana />
           <div className="my-1 border-t border-slate-100" />
           {NAV.map(enlace)}
+          {yo.rol === "admin" && NAV_LIDER.map(enlace)}
           <div className="mt-4 mb-1 hidden px-3 text-[11px] font-semibold tracking-wide text-slate-400 uppercase md:block">
             Catálogos
           </div>
