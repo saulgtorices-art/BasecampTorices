@@ -10,7 +10,7 @@ import {
   useState,
 } from "react";
 import { supabaseNavegador } from "@/lib/supabase/client";
-import type { Cliente, Miembro, RegistroTiempo, Tarea, TareaEditable } from "@/types/db";
+import type { Celula, Cliente, Miembro, RegistroTiempo, Tarea, TareaEditable } from "@/types/db";
 
 type Aviso = { id: number; texto: string; tipo: "error" | "ok" };
 
@@ -22,9 +22,11 @@ interface Datos {
   enLinea: boolean;
   clientes: Cliente[];
   miembros: Miembro[];
+  celulas: Celula[];
   tareas: Tarea[];
   clientePorId: Map<string, Cliente>;
   miembroPorId: Map<string, Miembro>;
+  celulaPorId: Map<string, Celula>;
   proyectos: string[];
 
   tareaAbiertaId: string | null;
@@ -38,6 +40,8 @@ interface Datos {
   borrarCliente: (id: string) => Promise<boolean>;
   guardarMiembro: (m: Partial<Miembro> & { nombre: string; correo: string }) => Promise<boolean>;
   borrarMiembro: (id: string) => Promise<boolean>;
+  /** Solo admin: nombre, área o líder de una célula. */
+  guardarCelula: (id: string, cambios: Partial<Pick<Celula, "nombre" | "area" | "lider_id">>) => Promise<boolean>;
   /** Cada usuario edita su propio perfil (nombre, puesto, teléfono y foto). */
   guardarMiPerfil: (p: {
     nombre: string;
@@ -77,6 +81,7 @@ export function DatosProvider({ yo, children }: { yo: Miembro; children: React.R
   const [cargando, setCargando] = useState(true);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [miembros, setMiembros] = useState<Miembro[]>([]);
+  const [celulas, setCelulas] = useState<Celula[]>([]);
   const [tareas, setTareas] = useState<Tarea[]>([]);
   const [tareaAbiertaId, abrirTarea] = useState<string | null>(null);
   const [avisos, setAvisos] = useState<Aviso[]>([]);
@@ -92,12 +97,15 @@ export function DatosProvider({ yo, children }: { yo: Miembro; children: React.R
 
   // ------------------------------------------------------------------ carga
   const cargar = useCallback(async () => {
-    const [c, m, t, r] = await Promise.all([
+    const [c, m, t, r, ce] = await Promise.all([
       supabase.from("clientes").select("*").order("nombre"),
       supabase.from("miembros").select("*").order("nombre"),
       supabase.from("tareas").select("*").order("posicion").limit(10000),
       supabase.from("registros_tiempo").select("*").eq("miembro_id", yo.id).is("fin", null).maybeSingle(),
+      supabase.from("celulas").select("*").order("numero"),
     ]);
+    // Si la migración de células aún no se aplica, la app sigue funcionando sin ellas.
+    if (!ce.error) setCelulas(ce.data as Celula[]);
     if (!r.error) setTemporizador((r.data as RegistroTiempo) ?? null);
     if (c.error || m.error || t.error) {
       avisar((c.error ?? m.error ?? t.error)!.message);
@@ -151,6 +159,14 @@ export function DatosProvider({ yo, children }: { yo: Miembro; children: React.R
           setMiembros((ms) =>
             upsert(ms, p.new as Miembro).sort((a, b) => a.nombre.localeCompare(b.nombre)),
           );
+        }
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "celulas" }, (p) => {
+        if (p.eventType === "DELETE") {
+          const id = (p.old as { id: string }).id;
+          setCelulas((cs) => cs.filter((c) => c.id !== id));
+        } else {
+          setCelulas((cs) => upsert(cs, p.new as Celula).sort((a, b) => a.numero - b.numero));
         }
       })
       .on(
@@ -350,6 +366,20 @@ export function DatosProvider({ yo, children }: { yo: Miembro; children: React.R
     [supabase, avisar],
   );
 
+  const guardarCelula: Datos["guardarCelula"] = useCallback(
+    async (id, cambios) => {
+      const { data, error } = await supabase.from("celulas").update(cambios).eq("id", id).select().single();
+      if (error) {
+        avisar(error.message);
+        return false;
+      }
+      const c = data as Celula;
+      setCelulas((cs) => cs.map((x) => (x.id === c.id ? c : x)));
+      return true;
+    },
+    [supabase, avisar],
+  );
+
   const guardarMiPerfil: Datos["guardarMiPerfil"] = useCallback(
     async (p) => {
       const { data, error } = await supabase.rpc("actualizar_mi_perfil", {
@@ -374,6 +404,7 @@ export function DatosProvider({ yo, children }: { yo: Miembro; children: React.R
   // --------------------------------------------------------------- derivados
   const clientePorId = useMemo(() => new Map(clientes.map((c) => [c.id, c])), [clientes]);
   const miembroPorId = useMemo(() => new Map(miembros.map((m) => [m.id, m])), [miembros]);
+  const celulaPorId = useMemo(() => new Map(celulas.map((c) => [c.id, c])), [celulas]);
   const proyectos = useMemo(
     () =>
       [...new Set(tareas.map((t) => t.proyecto?.trim()).filter((p): p is string => !!p))].sort(
@@ -392,9 +423,11 @@ export function DatosProvider({ yo, children }: { yo: Miembro; children: React.R
     enLinea,
     clientes,
     miembros,
+    celulas,
     tareas,
     clientePorId,
     miembroPorId,
+    celulaPorId,
     proyectos,
     tareaAbiertaId,
     abrirTarea,
@@ -405,6 +438,7 @@ export function DatosProvider({ yo, children }: { yo: Miembro; children: React.R
     borrarCliente,
     guardarMiembro,
     borrarMiembro,
+    guardarCelula,
     guardarMiPerfil,
     temporizador,
     iniciarTemporizador,
