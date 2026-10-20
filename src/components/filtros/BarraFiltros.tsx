@@ -4,13 +4,21 @@ import { useEffect, useState } from "react";
 import { Search, X } from "lucide-react";
 import clsx from "clsx";
 import { useDatos } from "@/components/datos/DatosProvider";
-import { ESTATUS, PRIORIDADES } from "@/types/db";
+import { ESTATUS, PRIORIDADES, type Miembro } from "@/types/db";
 import { useFiltros, type CampoFecha, type Filtros } from "./useFiltros";
 
 type Ocultable = "cliente" | "responsable" | "estatus";
 
-export default function BarraFiltros({ ocultar = [] }: { ocultar?: Ocultable[] }) {
-  const { clientes, miembros, proyectos } = useDatos();
+export default function BarraFiltros({
+  ocultar = [],
+  miembros: miembrosLista,
+}: {
+  ocultar?: Ocultable[];
+  /** Personas del filtro "Responsable" (por defecto, todo el equipo). */
+  miembros?: Miembro[];
+}) {
+  const { clientes, miembros: todos, proyectos } = useDatos();
+  const miembros = miembrosLista ?? todos;
   const { filtros, cambiar, limpiar, activos } = useFiltros();
   const [texto, setTexto] = useState(filtros.q);
 
