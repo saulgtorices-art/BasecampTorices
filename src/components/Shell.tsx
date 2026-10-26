@@ -13,6 +13,7 @@ import {
   UsersRound,
   Ticket,
   Network,
+  ScanSearch,
 } from "lucide-react";
 import clsx from "clsx";
 import type { Miembro } from "@/types/db";
@@ -29,6 +30,7 @@ const NAV = [
   { href: "/tickets", texto: "Tickets", icono: Ticket },
   { href: "/responsables", texto: "Por responsable", icono: UsersRound },
   { href: "/dashboard", texto: "Dashboard", icono: LayoutDashboard },
+  { href: "/auditorias", texto: "Auditorías UX/UI", icono: ScanSearch },
 ];
 
 // Solo coordinadores (admin): dashboard de su célula.
@@ -62,8 +64,8 @@ export default function Shell({ yo, children }: { yo: Miembro; children: React.R
 
   return (
     <DatosProvider yo={yo}>
-    <div className="flex h-full">
-      <aside className="flex w-14 shrink-0 flex-col border-r border-slate-200 bg-white md:w-56">
+    <div className="flex h-full print:block print:h-auto">
+      <aside className="flex w-14 print:hidden shrink-0 flex-col border-r border-slate-200 bg-white md:w-56">
         <div className="flex items-center gap-2 px-3 py-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo-simbolo.png" alt="Grupo Torices" width={36} height={19} className="h-auto w-9 shrink-0" />
@@ -93,7 +95,7 @@ export default function Shell({ yo, children }: { yo: Miembro; children: React.R
           </form>
         </div>
       </aside>
-      <main className="min-w-0 flex-1 overflow-auto">{children}</main>
+      <main className="min-w-0 flex-1 overflow-auto print:overflow-visible">{children}</main>
     </div>
     <PanelTarea />
     <BarraTemporizador />
