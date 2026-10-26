@@ -1,8 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Trash2 } from "lucide-react";
 import Encabezado from "@/components/Encabezado";
+import BotonAuditoria from "@/components/auditoria/BotonAuditoria";
+import Calificacion from "@/components/auditoria/Calificacion";
+import { useAuditorias } from "@/components/auditoria/useAuditorias";
 import { useDatos } from "@/components/datos/DatosProvider";
 import { CeldaTexto } from "@/components/ui/Celdas";
 
@@ -10,6 +14,7 @@ export default function ClientesPage() {
   const { clientes, tareas, guardarCliente, borrarCliente, esAdmin } = useDatos();
   const [nombre, setNombre] = useState("");
   const [dominio, setDominio] = useState("");
+  const { ultimaPorCliente, disponible: hayAuditorias } = useAuditorias();
 
   async function agregar(e: React.FormEvent) {
     e.preventDefault();
@@ -26,7 +31,7 @@ export default function ClientesPage() {
   return (
     <>
       <Encabezado titulo="Clientes" subtitulo="Cualquier miembro puede agregar y editar; solo admin borra." />
-      <div className="max-w-3xl p-4 md:p-6">
+      <div className="max-w-4xl p-4 md:p-6">
         <form onSubmit={agregar} className="mb-6 flex flex-wrap gap-2 rounded-lg border border-slate-200 bg-white p-3">
           <input
             value={nombre}
@@ -53,6 +58,7 @@ export default function ClientesPage() {
                 <th className="px-3 py-2 text-left font-medium">Dominio</th>
                 <th className="px-3 py-2 font-medium">Tareas</th>
                 <th className="px-3 py-2 font-medium">Activo</th>
+                {hayAuditorias && <th className="px-3 py-2 font-medium">Auditoría UX/UI</th>}
                 <th />
               </tr>
             </thead>
@@ -82,6 +88,21 @@ export default function ClientesPage() {
                       className="h-4 w-4 accent-marca-600"
                     />
                   </td>
+                  {hayAuditorias && (
+                    <td className="px-2 py-1">
+                      <div className="flex items-center justify-center gap-2">
+                        {ultimaPorCliente.get(c.id) && (
+                          <Link href={`/auditorias/${ultimaPorCliente.get(c.id)!.id}`} title="Ver la última auditoría">
+                            <Calificacion
+                              puntaje={ultimaPorCliente.get(c.id)!.puntaje}
+                              calificacion={ultimaPorCliente.get(c.id)!.calificacion}
+                            />
+                          </Link>
+                        )}
+                        <BotonAuditoria clienteId={c.id} dominio={c.dominio} compacto />
+                      </div>
+                    </td>
+                  )}
                   <td className="w-10 text-center">
                     {esAdmin && (
                       <button
@@ -98,7 +119,7 @@ export default function ClientesPage() {
               ))}
               {clientes.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="p-6 text-center text-slate-400">
+                  <td colSpan={6} className="p-6 text-center text-slate-400">
                     Aún no hay clientes.
                   </td>
                 </tr>

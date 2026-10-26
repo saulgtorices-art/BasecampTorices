@@ -76,6 +76,7 @@ Abre <http://localhost:3000>.
 
 1. En Vercel: **Add New → Project → Import** el repo `BasecampTorices`. El framework se detecta solo (Next.js).
 2. En **Environment Variables** agrega `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` y `SUPABASE_SERVICE_ROLE_KEY` (Production, Preview y Development).
+   Para las auditorías UX/UI agrega también `PAGESPEED_API_KEY` y `ANTHROPIC_API_KEY` (ver *Notas técnicas*).
 3. Deploy.
 4. Con el dominio final (ej. `basecamp-torices.vercel.app`):
    - Supabase → *URL Configuration*: cambia *Site URL* al dominio y agrega `https://basecamp-torices.vercel.app/auth/callback` en *Redirect URLs*.
@@ -95,6 +96,8 @@ Abre <http://localhost:3000>.
 | `registros_tiempo` | Temporizador y captura manual. `minutos` se calcula con un trigger; un solo temporizador activo por persona |
 | `historial` | Un renglón por campo modificado; lo llena un trigger en cada cambio de `tareas` |
 | `importaciones` | Lotes de importación (preparado para la pantalla de importación) |
+| `auditorias` | Auditorías UX/UI por cliente: estado, puntaje, calificación, resultado (jsonb) y capturas |
+| `auditoria_tareas` | Liga cada hallazgo de una auditoría con la tarea que se creó a partir de él |
 
 Vistas para el dashboard: `v_tareas_mes`, `v_horas_mes`, `v_tareas_vencidas` (usan `security_invoker`, así que respetan RLS).
 
@@ -179,4 +182,11 @@ supabase/
 - **Tickets**: la migración `20261021000001_tickets.sql` crea `tickets` y `comentarios_ticket`. Urgencia con SLA (Urgente 4 h, Alta 1 día, Media 3 días, Baja 1 semana). Admin o el asignado lo convierte en tarea con `convertir_ticket_en_tarea()` (hereda título, urgencia, descripción y evidencias); al terminar la tarea el ticket pasa a *Resuelto* solo, y si se reabre vuelve a *Aceptado*. Avisa a admins del ticket nuevo y a quien lo pidió de cada cambio.
 - **Células y "Mi célula"**: la migración `20261023000001_celulas.sql` crea `celulas` (número, área, líder) y agrega `miembros.celula_id`. Da de alta las 4 células y asigna a quien ya exista en `miembros` buscando nombre **y** apellido (sin acentos) en `nombre` o `alias`; los Team Leaders quedan como admin y líderes. Al aplicarla, un `NOTICE` lista a quién no encontró: dalos de alta en **Equipo** y elige su célula en la columna *Célula* (el líder se cambia en las tarjetas de células). La pantalla **Mi célula** (solo admin) muestra indicadores, la carga por integrante y la tabla/kanban de tareas del equipo, que se puede agrupar por integrante, estatus, prioridad o cliente y filtrar con vistas rápidas (vencidas, vencen en 7 días, urgentes, sin fecha, en QA).
 - **Zona horaria**: "hoy", las vencidas y los meses se calculan en `America/Mexico_City`.
-- `SUPABASE_SERVICE_ROLE_KEY` hoy solo la usa el helper `supabaseAdmin()`, que queda listo para la futura importación masiva.
+- `SUPABASE_SERVICE_ROLE_KEY` la usa el helper `supabaseAdmin()`: hoy para que las auditorías UX/UI guarden su resultado en segundo plano, y queda lista para la futura importación masiva.
+- **Auditorías UX/UI**: la migración `20261026000001_auditorias_ux.sql` crea `auditorias` y `auditoria_tareas`. Se lanzan desde **Clientes** (botón *Auditar*, usa el dominio) o desde **Auditorías UX/UI** (permite una URL específica). `POST /api/auditorias` crea la fila, responde de inmediato y sigue con `after()` (hasta 300 s, `maxDuration`):
+  1. Descarga el HTML (bloquea IPs privadas y valida cada redirección) y revisa hasta 6 páginas del menú, `robots.txt`, `sitemap.xml` y la redirección http→https.
+  2. Corre PageSpeed Insights en móvil y escritorio: puntajes de Lighthouse, Core Web Vitals de usuarios reales (CrUX) y las capturas del primer pantallazo.
+  3. Evalúa 39 checks deterministas (`src/lib/auditoria/checks.ts`). Puntaje sobre 100: UX 40, UI 35, Responsive 10, Accesibilidad 10, Técnico 5. Cada categoría = puntos obtenidos ÷ puntos evaluables × su peso; los checks sin datos no cuentan. Calificación: A ≥ 90, B ≥ 80, C ≥ 70, D ≥ 55, F.
+  4. Claude redacta resumen, veredictos por categoría, observaciones sobre las capturas (no suman puntos), próximos pasos y lagunas. **La IA no cambia los puntajes.** Sin `ANTHROPIC_API_KEY` el reporte sale igual con textos base.
+
+  Variables: `PAGESPEED_API_KEY` (Google Cloud → habilita *PageSpeed Insights API* → crea una API key; sin ella la cuota es muy baja), `ANTHROPIC_API_KEY` y, opcional, `ANTHROPIC_MODEL` (por defecto `claude-sonnet-5-5`). Desde cada hallazgo, quick win o paso se crea una tarea del cliente (proyecto *Auditoría UX/UI*, prioridad según severidad) y queda ligada para no duplicarla. Al volver a auditar, el reporte compara contra la auditoría anterior (puntos y hallazgos resueltos o nuevos). *Imprimir / PDF* usa el diálogo del navegador. Pendiente para una fase 2: Search Console, GA4 y Clarity, y capturas con Chromium propio (touch targets a 375 px).

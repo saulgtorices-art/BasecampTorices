@@ -68,3 +68,22 @@ export function iniciales(nombre: string) {
     .map((p) => p[0]!.toUpperCase())
     .join("");
 }
+
+// ------------------------------------------------------------------ auditorías
+/** Colores de severidad del reporte de auditoría (mismos tonos que FOVEA). */
+export const COLOR_SEVERIDAD = {
+  critico: { fondo: "#FEF2F2", texto: "#B91C1C", punto: "#DC2626", nombre: "Crítico" },
+  importante: { fondo: "#FFF7ED", texto: "#C2410C", punto: "#EA580C", nombre: "Importante" },
+  mejora: { fondo: "#FFFBEB", texto: "#B45309", punto: "#D97706", nombre: "Mejora" },
+  positivo: { fondo: "#F0FDF4", texto: "#15803D", punto: "#16A34A", nombre: "Bien" },
+  pendiente: { fondo: "#F8FAFC", texto: "#475569", punto: "#94A3B8", nombre: "Sin evaluar" },
+  ia: { fondo: "#F5F3FF", texto: "#6D28D9", punto: "#7C3AED", nombre: "IA" },
+} as const;
+
+export const COLOR_CALIFICACION: Record<string, string> = {
+  A: "#16A34A",
+  B: "#65A30D",
+  C: "#D97706",
+  D: "#EA580C",
+  F: "#DC2626",
+};

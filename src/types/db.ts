@@ -195,6 +195,35 @@ export interface Ticket {
   updated_at: string;
 }
 
+export type EstadoAuditoria = "en_proceso" | "lista" | "error";
+
+/** Fila de `auditorias`. `resultado` y `capturas` están tipados en lib/auditoria/tipos. */
+export interface Auditoria {
+  id: string;
+  cliente_id: string;
+  url: string;
+  estado: EstadoAuditoria;
+  progreso: string | null;
+  puntaje: number | null;
+  calificacion: "A" | "B" | "C" | "D" | "F" | null;
+  puntajes: import("@/lib/auditoria/tipos").Puntajes | null;
+  resultado: import("@/lib/auditoria/tipos").ResultadoAuditoria | null;
+  capturas: import("@/lib/auditoria/tipos").Capturas | null;
+  error: string | null;
+  creado_por: string | null;
+  created_at: string;
+  updated_at: string;
+  terminado_at: string | null;
+}
+
+export interface AuditoriaTarea {
+  auditoria_id: string;
+  hallazgo_id: string;
+  tarea_id: string;
+  creado_por: string | null;
+  created_at: string;
+}
+
 export interface ComentarioTicket {
   id: string;
   ticket_id: string;
