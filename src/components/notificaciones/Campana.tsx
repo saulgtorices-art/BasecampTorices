@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
-import { AlarmClock, AtSign, Bell, BellRing, CheckCheck, RefreshCw, Ticket, Trash2, UserPlus } from "lucide-react";
+import { AlarmClock, AtSign, Bell, BellRing, CheckCheck, RefreshCw, Ticket, Trash2, Upload, UserPlus } from "lucide-react";
 import { supabaseNavegador } from "@/lib/supabase/client";
 import { useDatos } from "@/components/datos/DatosProvider";
 import Avatar from "@/components/ui/Avatar";
@@ -16,6 +16,7 @@ const ICONO: Record<TipoNotificacion, React.ReactNode> = {
   vencida: <AlarmClock size={12} />,
   ticket: <Ticket size={12} />,
   eliminada: <Trash2 size={12} />,
+  importacion: <Upload size={12} />,
 };
 
 const COLOR: Record<TipoNotificacion, string> = {
@@ -25,6 +26,7 @@ const COLOR: Record<TipoNotificacion, string> = {
   vencida: "bg-red-600",
   ticket: "bg-purple-600",
   eliminada: "bg-slate-600",
+  importacion: "bg-teal-600",
 };
 
 function hace(iso: string) {

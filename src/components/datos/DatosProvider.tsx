@@ -124,6 +124,16 @@ export function DatosProvider({ yo, children }: { yo: Miembro; children: React.R
     cargar();
   }, [cargar]);
 
+  // Enlaces de los correos: /tabla?tarea=<id> abre esa tarea en el panel.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const id = url.searchParams.get("tarea");
+    if (!id) return;
+    abrirTarea(id);
+    url.searchParams.delete("tarea");
+    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+  }, []);
+
   // -------------------------------------------------------------- realtime
   useEffect(() => {
     const upsert = <T extends { id: string }>(lista: T[], fila: T) => {
