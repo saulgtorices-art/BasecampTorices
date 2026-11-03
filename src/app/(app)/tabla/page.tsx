@@ -3,6 +3,7 @@
 import { Suspense } from "react";
 import Encabezado from "@/components/Encabezado";
 import NuevaTarea from "@/components/NuevaTarea";
+import ImportarTareas from "@/components/importar/ImportarTareas";
 import TablaTareas from "@/components/tabla/TablaTareas";
 import BarraFiltros from "@/components/filtros/BarraFiltros";
 import { useFiltros } from "@/components/filtros/useFiltros";
@@ -14,6 +15,7 @@ function Contenido() {
   return (
     <>
       <Encabezado titulo="Tabla" subtitulo={`${tareas.length} tareas agrupadas por cliente`}>
+        <ImportarTareas />
         <NuevaTarea />
       </Encabezado>
       <BarraFiltros />

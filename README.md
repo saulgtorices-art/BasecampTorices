@@ -94,7 +94,8 @@ Abre <http://localhost:3000>.
 | `comentarios_tarea` | Hilo de comentarios de cada tarea |
 | `registros_tiempo` | Temporizador y captura manual. `minutos` se calcula con un trigger; un solo temporizador activo por persona |
 | `historial` | Un renglón por campo modificado; lo llena un trigger en cada cambio de `tareas` |
-| `importaciones` | Lotes de importación (preparado para la pantalla de importación) |
+| `importaciones` | Lotes de la carga masiva (archivo, filas, errores, `deshecha_at`) |
+| `tareas_eliminadas` | Papelera: copia completa de cada tarea borrada (con comentarios, archivos, tiempo e historial) |
 
 Vistas para el dashboard: `v_tareas_mes`, `v_horas_mes`, `v_tareas_vencidas` (usan `security_invoker`, así que respetan RLS).
 
@@ -102,20 +103,29 @@ Vistas para el dashboard: `v_tareas_mes`, `v_horas_mes`, `v_tareas_vencidas` (us
 
 | | Leer | Crear / editar | Borrar |
 |---|---|---|---|
-| tareas, clientes | miembros | miembros | **solo admin** |
+| tareas | miembros | miembros | miembros (va a la papelera y se avisa al líder) |
+| clientes | miembros | miembros | **solo admin** |
+| papelera (`tareas_eliminadas`) | **solo admin** | solo el trigger | **solo admin** |
+| carga masiva / deshacer lote | miembros | **solo admin** | **solo admin** |
 | miembros | miembros | **solo admin** | **solo admin** |
 | comentarios, registros de tiempo | miembros | el autor (o admin) | el autor (o admin) |
 | historial | miembros | solo el trigger | nadie |
 
-### Importación (preparada, sin pantalla todavía)
+### Carga masiva (Tabla → *Carga masiva*, solo líderes)
 
-El modelo ya soporta una futura pantalla que mapee las columnas **Cliente, Tarea, Responsable, Estatus, Prioridad, QA, Fecha de Entrega, Comentarios, Documento**:
+- Acepta **.xlsx**, **.csv** o celdas **pegadas desde Excel**. Hay una plantilla descargable.
+- Detecta sola la fila de encabezados y las columnas **Cliente, Tarea, Responsable, Estatus, Prioridad, QA, Fecha de Inicio, Fecha de Entrega, Fecha de Cierre, Proyecto, Documento, Comentarios** (sin importar acentos u orden); cada columna se puede reasignar a mano.
+- Si el archivo tiene una hoja por cliente, se elige la hoja y el cliente se toma de su nombre (o se escribe uno para todas las filas).
+- **Responsable** → `miembros.nombre` o `alias` (también nombre parcial si es único). **Estatus/Prioridad** aceptan variantes ("done", "en progreso", "normal"…). Fechas de Excel o dd/mm/aaaa.
+- Antes de cargar muestra la vista previa con errores (no se cargan) y avisos (duplicadas, responsable no encontrado, fecha inválida…).
+- Todo entra en un lote (`importar_tareas()`), con un solo aviso por responsable. Las tareas que llegan *Terminado* se cierran en su fecha de entrega para que el dashboard las cuente en su mes.
+- Desde el mismo modal se ve el historial de cargas y se **deshace** un lote completo (`deshacer_importacion()`).
+- La lógica de lectura está en `src/lib/importacion.ts`.
 
-- **Cliente** → `clientes.nombre` (índice único sin distinguir mayúsculas; se puede crear si no existe).
-- **Responsable** → `miembros.nombre` o cualquier valor de `miembros.alias`.
-- **Estatus / Prioridad** → los valores exactos de los enums.
-- Cada importación crea una fila en `importaciones` y marca sus tareas con `import_lote_id`, así un lote se puede revisar o deshacer completo.
-- Las constantes de columnas están en `src/types/db.ts` (`COLUMNAS_IMPORTACION`).
+### Duplicar y borrar tareas
+
+- **Duplicar** (ícono de copiar en la fila de la Tabla o en el panel): crea una copia en *Backlog* justo debajo, con el mismo cliente, responsable, prioridad, fechas, proyecto, documento y notas.
+- **Borrar**: cualquier miembro. La tarea se guarda completa en la **Papelera** (menú *Papelera*, solo admin) y llega un aviso al Team Leader de la célula del responsable, de quien la creó y de quien la borró (si nadie tiene célula, a todos los admins). Desde la Papelera se restaura con sus comentarios, archivos, tiempo, historial y ticket ligado, o se elimina definitivamente (ahí sí se borran sus archivos de Storage).
 
 ## Estructura
 
@@ -147,7 +157,10 @@ supabase/
 - Catálogos → Clientes: crea 2 o 3 clientes. Catálogos → Equipo: da de alta a Sebastián y Patrick con su correo de Google.
 - En la Tabla, usa *Agregar tarea* dentro de un cliente o el botón *Nueva tarea*.
 - Edita en línea el título, responsable, estatus, prioridad, QA, fechas, proyecto y comentarios. Recarga la página y comprueba que todo se guardó.
-- Botón *Abrir* → panel lateral. El botón de borrar solo lo ve un admin.
+- Botón *Abrir* → panel lateral. Cualquiera puede borrar; la tarea queda en la Papelera.
+- Duplica una tarea desde la fila o el panel: la copia aparece debajo en *Backlog*.
+- Como miembro borra una tarea: el líder de la célula recibe el aviso; en *Papelera* la restaura y vuelve con sus comentarios y archivos.
+- *Carga masiva*: sube la plantilla con 3 filas, revisa la vista previa, carga y luego *Deshacer* desde el historial.
 
 **3. Kanban, filtros y realtime**
 - Kanban: arrastra una tarjeta a *Terminado*; la fecha de cierre se llena sola.
@@ -179,4 +192,5 @@ supabase/
 - **Tickets**: la migración `20261021000001_tickets.sql` crea `tickets` y `comentarios_ticket`. Urgencia con SLA (Urgente 4 h, Alta 1 día, Media 3 días, Baja 1 semana). Admin o el asignado lo convierte en tarea con `convertir_ticket_en_tarea()` (hereda título, urgencia, descripción y evidencias); al terminar la tarea el ticket pasa a *Resuelto* solo, y si se reabre vuelve a *Aceptado*. Avisa a admins del ticket nuevo y a quien lo pidió de cada cambio.
 - **Células y "Mi célula"**: la migración `20261023000001_celulas.sql` crea `celulas` (número, área, líder) y agrega `miembros.celula_id`. Da de alta las 4 células y asigna a quien ya exista en `miembros` buscando nombre **y** apellido (sin acentos) en `nombre` o `alias`; los Team Leaders quedan como admin y líderes. Al aplicarla, un `NOTICE` lista a quién no encontró: dalos de alta en **Equipo** y elige su célula en la columna *Célula* (el líder se cambia en las tarjetas de células). La pantalla **Mi célula** (solo admin) muestra indicadores, la carga por integrante y la tabla/kanban de tareas del equipo, que se puede agrupar por integrante, estatus, prioridad o cliente y filtrar con vistas rápidas (vencidas, vencen en 7 días, urgentes, sin fecha, en QA).
 - **Zona horaria**: "hoy", las vencidas y los meses se calculan en `America/Mexico_City`.
-- `SUPABASE_SERVICE_ROLE_KEY` hoy solo la usa el helper `supabaseAdmin()`, que queda listo para la futura importación masiva.
+- **Papelera y carga masiva**: la migración `20261103000001_duplicar_importar_papelera.sql` abre el borrado de tareas a todos los miembros, crea `tareas_eliminadas` (la llena un trigger `before delete`), agrega el aviso `eliminada` y las funciones `restaurar_tarea()`, `importar_tareas()` y `deshacer_importacion()`. Mientras se importa o restaura, `app.sin_avisos` silencia los avisos automáticos para no inundar la campanita.
+- `SUPABASE_SERVICE_ROLE_KEY` hoy solo la usa el helper `supabaseAdmin()`.

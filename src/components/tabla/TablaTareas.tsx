@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import clsx from "clsx";
-import { ChevronDown, ChevronRight, ExternalLink, Maximize2, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Copy, ExternalLink, Maximize2, Plus, Trash2 } from "lucide-react";
 import { useDatos } from "@/components/datos/DatosProvider";
 import EtiquetaSelect from "@/components/ui/EtiquetaSelect";
 import SelectorMiembro from "@/components/ui/SelectorMiembro";
@@ -236,7 +236,7 @@ function GrupoTabla({
 }
 
 function FilaTarea({ tarea: t, color, agruparPor }: { tarea: Tarea; color: string; agruparPor: Agrupacion }) {
-  const { actualizarTarea, borrarTarea, abrirTarea, clientes, esAdmin, tareaAbiertaId } = useDatos();
+  const { actualizarTarea, borrarTarea, duplicarTarea, abrirTarea, clientes, tareaAbiertaId } = useDatos();
   const guardar = (cambios: TareaEditable) => actualizarTarea(t.id, cambios);
   const vencida = estaVencida(t);
 
@@ -248,17 +248,16 @@ function FilaTarea({ tarea: t, color, agruparPor }: { tarea: Tarea; color: strin
       )}
     >
       <td style={{ borderLeft: `6px solid ${color}` }} className="text-center">
-        {esAdmin && (
-          <button
-            title="Borrar tarea"
-            onClick={() => {
-              if (confirm(`¿Borrar la tarea "${t.titulo}"?`)) borrarTarea(t.id);
-            }}
-            className="invisible text-slate-400 group-hover:visible hover:text-red-600"
-          >
-            <Trash2 size={14} />
-          </button>
-        )}
+        <button
+          title="Borrar tarea (se avisa a tu líder)"
+          onClick={() => {
+            if (confirm(`¿Borrar la tarea "${t.titulo}"?\n\nSe avisará a tu líder y podrá restaurarla desde la Papelera.`))
+              borrarTarea(t.id);
+          }}
+          className="invisible text-slate-400 group-hover:visible hover:text-red-600"
+        >
+          <Trash2 size={14} />
+        </button>
       </td>
       <td className="border-l border-slate-100">
         <div className="flex items-center pr-1">
@@ -269,6 +268,13 @@ function FilaTarea({ tarea: t, color, agruparPor }: { tarea: Tarea; color: strin
             className="ml-1 flex shrink-0 items-center gap-1 rounded px-1.5 py-1 text-xs text-slate-400 opacity-0 group-hover:opacity-100 hover:bg-slate-200 hover:text-slate-700"
           >
             <Maximize2 size={13} /> Abrir
+          </button>
+          <button
+            title="Duplicar tarea"
+            onClick={() => duplicarTarea(t.id)}
+            className="flex shrink-0 items-center rounded p-1 text-slate-400 opacity-0 group-hover:opacity-100 hover:bg-slate-200 hover:text-slate-700"
+          >
+            <Copy size={13} />
           </button>
         </div>
       </td>

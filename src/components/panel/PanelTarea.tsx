@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import clsx from "clsx";
-import { ExternalLink, Trash2, X } from "lucide-react";
+import { Copy, ExternalLink, Trash2, X } from "lucide-react";
 import { useDatos } from "@/components/datos/DatosProvider";
 import EtiquetaSelect from "@/components/ui/EtiquetaSelect";
 import SelectorMiembro from "@/components/ui/SelectorMiembro";
@@ -85,7 +85,7 @@ export default function PanelTarea() {
 }
 
 function Encabezado({ tarea }: { tarea: Tarea }) {
-  const { abrirTarea, actualizarTarea, borrarTarea, esAdmin, clientePorId } = useDatos();
+  const { abrirTarea, actualizarTarea, borrarTarea, duplicarTarea, clientePorId } = useDatos();
   const [titulo, setTitulo] = useState(tarea.titulo);
   const [previo, setPrevio] = useState(tarea.titulo);
   if (tarea.titulo !== previo) {
@@ -109,15 +109,26 @@ function Encabezado({ tarea }: { tarea: Tarea }) {
           className="w-full resize-none rounded-md px-1 text-lg font-semibold outline-none focus:ring-2 focus:ring-marca-100"
         />
       </div>
-      {esAdmin && (
-        <button
-          title="Borrar tarea"
-          onClick={() => confirm(`¿Borrar la tarea "${tarea.titulo}"?`) && borrarTarea(tarea.id)}
-          className="rounded p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"
-        >
-          <Trash2 size={18} />
-        </button>
-      )}
+      <button
+        title="Duplicar tarea"
+        onClick={async () => {
+          const copia = await duplicarTarea(tarea.id);
+          if (copia) abrirTarea(copia.id);
+        }}
+        className="rounded p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+      >
+        <Copy size={18} />
+      </button>
+      <button
+        title="Borrar tarea (se avisa a tu líder)"
+        onClick={() =>
+          confirm(`¿Borrar la tarea "${tarea.titulo}"?\n\nSe avisará a tu líder y podrá restaurarla desde la Papelera.`) &&
+          borrarTarea(tarea.id)
+        }
+        className="rounded p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"
+      >
+        <Trash2 size={18} />
+      </button>
       <button
         title="Cerrar (Esc)"
         onClick={() => abrirTarea(null)}

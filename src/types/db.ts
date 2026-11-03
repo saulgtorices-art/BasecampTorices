@@ -106,7 +106,7 @@ export interface ComentarioTarea {
   created_at: string;
 }
 
-export type TipoNotificacion = "mencion" | "asignacion" | "estatus" | "vencida" | "ticket";
+export type TipoNotificacion = "mencion" | "asignacion" | "estatus" | "vencida" | "ticket" | "eliminada";
 
 export interface Notificacion {
   id: string;
@@ -155,7 +155,7 @@ export interface Historial {
   fecha: string;
 }
 
-/** Columnas que acepta la futura pantalla de importación (Sheets / CSV). */
+/** Columnas base de la carga masiva (la lógica completa está en src/lib/importacion.ts). */
 export const COLUMNAS_IMPORTACION = [
   "Cliente",
   "Tarea",

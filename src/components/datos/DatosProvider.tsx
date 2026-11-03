@@ -34,7 +34,10 @@ interface Datos {
 
   crearTarea: (datos: TareaEditable & { cliente_id: string; titulo: string }) => Promise<Tarea | null>;
   actualizarTarea: (id: string, cambios: TareaEditable) => Promise<boolean>;
+  /** Cualquier miembro puede borrar; la tarea va a la papelera y se avisa a los líderes. */
   borrarTarea: (id: string) => Promise<boolean>;
+  /** Crea una copia en Backlog justo debajo de la original. */
+  duplicarTarea: (id: string) => Promise<Tarea | null>;
 
   guardarCliente: (c: Partial<Cliente> & { nombre: string }) => Promise<boolean>;
   borrarCliente: (id: string) => Promise<boolean>;
@@ -282,20 +285,42 @@ export function DatosProvider({ yo, children }: { yo: Miembro; children: React.R
       }
       setTareas((ts) => ts.filter((t) => t.id !== id));
       abrirTarea((actual) => (actual === id ? null : actual));
-      // Limpia los archivos adjuntos de la tarea en Storage (sin bloquear).
-      // Incluye la carpeta de evidencias de comentarios ({id}/comentarios).
-      void (async () => {
-        for (const carpeta of [id, `${id}/comentarios`]) {
-          const { data } = await supabase.storage.from("adjuntos").list(carpeta, { limit: 1000 });
-          const archivos = (data ?? []).filter((f) => f.id);
-          if (archivos.length)
-            await supabase.storage.from("adjuntos").remove(archivos.map((f) => `${carpeta}/${f.name}`));
-        }
-      })();
-      avisar("Tarea eliminada", "ok");
+      // Los archivos se quedan en Storage: la tarea va a la papelera y un líder
+      // puede restaurarla. Se limpian al vaciarla de la papelera.
+      avisar("Tarea eliminada. Se avisó a tu líder y puede restaurarla desde la Papelera.", "ok");
       return true;
     },
     [supabase, avisar],
+  );
+
+  const duplicarTarea: Datos["duplicarTarea"] = useCallback(
+    async (id) => {
+      const o = tareasRef.current.find((t) => t.id === id);
+      if (!o) return null;
+      // Justo debajo de la original: a la mitad entre ella y la siguiente.
+      const siguiente = tareasRef.current
+        .map((t) => t.posicion)
+        .filter((p) => p > o.posicion)
+        .reduce((min, p) => Math.min(min, p), Infinity);
+      const posicion = Number.isFinite(siguiente) ? (o.posicion + siguiente) / 2 : o.posicion + 1;
+      const t = await crearTarea({
+        cliente_id: o.cliente_id,
+        titulo: `${o.titulo} (copia)`,
+        responsable_id: o.responsable_id,
+        estatus: "Backlog",
+        prioridad: o.prioridad,
+        qa: o.qa,
+        fecha_inicio: o.fecha_inicio,
+        fecha_entrega: o.fecha_entrega,
+        comentarios: o.comentarios,
+        documento_url: o.documento_url,
+        proyecto: o.proyecto,
+        posicion,
+      });
+      if (t) avisar("Tarea duplicada", "ok");
+      return t;
+    },
+    [crearTarea, avisar],
   );
 
   // -------------------------------------------------------------- catálogos
@@ -434,6 +459,7 @@ export function DatosProvider({ yo, children }: { yo: Miembro; children: React.R
     crearTarea,
     actualizarTarea,
     borrarTarea,
+    duplicarTarea,
     guardarCliente,
     borrarCliente,
     guardarMiembro,
