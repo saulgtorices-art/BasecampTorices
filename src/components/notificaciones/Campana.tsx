@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { useRouter } from "next/navigation";
-import { AlarmClock, AtSign, Bell, BellRing, CheckCheck, RefreshCw, Ticket, UserPlus } from "lucide-react";
+import { AlarmClock, AtSign, Bell, BellRing, CheckCheck, RefreshCw, Ticket, Trash2, UserPlus } from "lucide-react";
 import { supabaseNavegador } from "@/lib/supabase/client";
 import { useDatos } from "@/components/datos/DatosProvider";
 import Avatar from "@/components/ui/Avatar";
@@ -15,6 +15,7 @@ const ICONO: Record<TipoNotificacion, React.ReactNode> = {
   estatus: <RefreshCw size={12} />,
   vencida: <AlarmClock size={12} />,
   ticket: <Ticket size={12} />,
+  eliminada: <Trash2 size={12} />,
 };
 
 const COLOR: Record<TipoNotificacion, string> = {
@@ -23,6 +24,7 @@ const COLOR: Record<TipoNotificacion, string> = {
   estatus: "bg-amber-500",
   vencida: "bg-red-600",
   ticket: "bg-purple-600",
+  eliminada: "bg-slate-600",
 };
 
 function hace(iso: string) {
@@ -80,6 +82,7 @@ export default function Campana() {
               aviso.onclick = () => {
                 window.focus();
                 if (n.ticket_id) window.location.assign(`/tickets?ticket=${n.ticket_id}`);
+                else if (n.tipo === "eliminada") window.location.assign("/papelera");
                 else if (n.tarea_id) abrirTareaRef.current(n.tarea_id);
                 aviso.close();
               };
@@ -123,6 +126,7 @@ export default function Campana() {
     marcarLeida([n.id]);
     setAbierta(false);
     if (n.ticket_id) router.push(`/tickets?ticket=${n.ticket_id}`);
+    else if (n.tipo === "eliminada") router.push("/papelera");
     else if (n.tarea_id) abrirTarea(n.tarea_id);
   }
 

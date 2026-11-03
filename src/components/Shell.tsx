@@ -13,6 +13,7 @@ import {
   UsersRound,
   Ticket,
   Network,
+  Trash2,
 } from "lucide-react";
 import clsx from "clsx";
 import type { Miembro } from "@/types/db";
@@ -32,7 +33,10 @@ const NAV = [
 ];
 
 // Solo coordinadores (admin): dashboard de su célula.
-const NAV_LIDER = [{ href: "/mi-celula", texto: "Mi célula", icono: Network }];
+const NAV_LIDER = [
+  { href: "/mi-celula", texto: "Mi célula", icono: Network },
+  { href: "/papelera", texto: "Papelera", icono: Trash2 },
+];
 
 const NAV_ADMIN = [
   { href: "/clientes", texto: "Clientes", icono: Building2 },
