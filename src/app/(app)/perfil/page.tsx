@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Camera, Trash2 } from "lucide-react";
+import AvisosCorreo from "@/components/perfil/AvisosCorreo";
 import Encabezado from "@/components/Encabezado";
 import Avatar from "@/components/ui/Avatar";
 import { useDatos } from "@/components/datos/DatosProvider";
@@ -145,6 +146,7 @@ export default function PerfilPage() {
           {guardando ? "Guardando…" : "Guardar cambios"}
         </button>
       </form>
+      <AvisosCorreo />
     </>
   );
 }

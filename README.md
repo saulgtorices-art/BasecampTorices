@@ -106,12 +106,12 @@ Vistas para el dashboard: `v_tareas_mes`, `v_horas_mes`, `v_tareas_vencidas` (us
 | tareas | miembros | miembros | miembros (va a la papelera y se avisa al líder) |
 | clientes | miembros | miembros | **solo admin** |
 | papelera (`tareas_eliminadas`) | **solo admin** | solo el trigger | **solo admin** |
-| carga masiva / deshacer lote | miembros | **solo admin** | **solo admin** |
+| carga masiva | miembros | miembros (se avisa al líder) | deshacer: quien cargó o admin |
 | miembros | miembros | **solo admin** | **solo admin** |
 | comentarios, registros de tiempo | miembros | el autor (o admin) | el autor (o admin) |
 | historial | miembros | solo el trigger | nadie |
 
-### Carga masiva (Tabla → *Carga masiva*, solo líderes)
+### Carga masiva (Tabla → *Carga masiva*, todo el equipo)
 
 - Acepta **.xlsx**, **.csv** o celdas **pegadas desde Excel**. Hay una plantilla descargable.
 - Detecta sola la fila de encabezados y las columnas **Cliente, Tarea, Responsable, Estatus, Prioridad, QA, Fecha de Inicio, Fecha de Entrega, Fecha de Cierre, Proyecto, Documento, Comentarios** (sin importar acentos u orden); cada columna se puede reasignar a mano.
@@ -119,13 +119,33 @@ Vistas para el dashboard: `v_tareas_mes`, `v_horas_mes`, `v_tareas_vencidas` (us
 - **Responsable** → `miembros.nombre` o `alias` (también nombre parcial si es único). **Estatus/Prioridad** aceptan variantes ("done", "en progreso", "normal"…). Fechas de Excel o dd/mm/aaaa.
 - Antes de cargar muestra la vista previa con errores (no se cargan) y avisos (duplicadas, responsable no encontrado, fecha inválida…).
 - Todo entra en un lote (`importar_tareas()`), con un solo aviso por responsable. Las tareas que llegan *Terminado* se cierran en su fecha de entrega para que el dashboard las cuente en su mes.
-- Desde el mismo modal se ve el historial de cargas y se **deshace** un lote completo (`deshacer_importacion()`).
+- Si quien carga no es líder, al líder de su célula le llega el aviso *cargó N tareas…*.
+- Desde el mismo modal se ve el historial de cargas y se **deshace** un lote completo (`deshacer_importacion()`): quien lo cargó o un admin.
 - La lógica de lectura está en `src/lib/importacion.ts`.
 
 ### Duplicar y borrar tareas
 
 - **Duplicar** (ícono de copiar en la fila de la Tabla o en el panel): crea una copia en *Backlog* justo debajo, con el mismo cliente, responsable, prioridad, fechas, proyecto, documento y notas.
 - **Borrar**: cualquier miembro. La tarea se guarda completa en la **Papelera** (menú *Papelera*, solo admin) y llega un aviso al Team Leader de la célula del responsable, de quien la creó y de quien la borró (si nadie tiene célula, a todos los admins). Desde la Papelera se restaura con sus comentarios, archivos, tiempo, historial y ticket ligado, o se elimina definitivamente (ahí sí se borran sus archivos de Storage).
+
+### Avisos por correo
+
+Cada notificación de la campanita también puede llegar por correo. Cada persona elige cuáles en **Mi perfil → Avisos por correo** (por defecto: menciones, asignaciones, tickets y, para líderes, tareas eliminadas y cargas masivas).
+
+Cómo funciona: un trigger en `notificaciones` llama con `pg_net` (asíncrono) a `POST /api/avisos-correo`, que arma el correo y lo envía con Gmail. Si el correo falla, la notificación igual se guarda.
+
+Configuración (una sola vez):
+
+1. **Gmail**: en la cuenta que va a enviar (de preferencia una del equipo, ej. `avisos.torices@gmail.com`) activa la verificación en 2 pasos y crea una *contraseña de aplicación* en <https://myaccount.google.com/apppasswords>.
+2. **Vercel → Settings → Environment Variables** (Production): `CORREO_USUARIO`, `CORREO_CONTRASENA` (la de aplicación), `AVISOS_CORREO_SECRETO` (cualquier texto largo al azar) y verifica que exista `SUPABASE_SERVICE_ROLE_KEY`. Haz *Redeploy*.
+3. **Supabase → SQL Editor**:
+   ```sql
+   insert into public.config_avisos_correo (url, secreto)
+   values ('https://TU-DOMINIO.vercel.app/api/avisos-correo', 'EL-MISMO-AVISOS_CORREO_SECRETO');
+   ```
+4. En **Mi perfil** usa *Enviarme un correo de prueba*.
+
+Para pausar todos los correos: `update public.config_avisos_correo set activo = false;`. Gmail permite ~500 correos al día por cuenta.
 
 ## Estructura
 
@@ -193,4 +213,5 @@ supabase/
 - **Células y "Mi célula"**: la migración `20261023000001_celulas.sql` crea `celulas` (número, área, líder) y agrega `miembros.celula_id`. Da de alta las 4 células y asigna a quien ya exista en `miembros` buscando nombre **y** apellido (sin acentos) en `nombre` o `alias`; los Team Leaders quedan como admin y líderes. Al aplicarla, un `NOTICE` lista a quién no encontró: dalos de alta en **Equipo** y elige su célula en la columna *Célula* (el líder se cambia en las tarjetas de células). La pantalla **Mi célula** (solo admin) muestra indicadores, la carga por integrante y la tabla/kanban de tareas del equipo, que se puede agrupar por integrante, estatus, prioridad o cliente y filtrar con vistas rápidas (vencidas, vencen en 7 días, urgentes, sin fecha, en QA).
 - **Zona horaria**: "hoy", las vencidas y los meses se calculan en `America/Mexico_City`.
 - **Papelera y carga masiva**: la migración `20261103000001_duplicar_importar_papelera.sql` abre el borrado de tareas a todos los miembros, crea `tareas_eliminadas` (la llena un trigger `before delete`), agrega el aviso `eliminada` y las funciones `restaurar_tarea()`, `importar_tareas()` y `deshacer_importacion()`. Mientras se importa o restaura, `app.sin_avisos` silencia los avisos automáticos para no inundar la campanita.
-- `SUPABASE_SERVICE_ROLE_KEY` hoy solo la usa el helper `supabaseAdmin()`.
+- `SUPABASE_SERVICE_ROLE_KEY` la usa `supabaseAdmin()` en `/api/avisos-correo` para leer la notificación y el correo del destinatario.
+- **Carga para todos y correos**: la migración `20261103000002_carga_todos_avisos_correo.sql` abre `importar_tareas()` a todos los miembros, agrega el aviso `importacion`, `miembros.correo_tipos`, `notificaciones.correo_enviado_at`, la tabla `config_avisos_correo` y el trigger que dispara los correos.

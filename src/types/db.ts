@@ -35,6 +35,8 @@ export interface Miembro {
   puesto: string | null;
   telefono: string | null;
   celula_id: string | null;
+  /** Tipos de aviso que le llegan por correo. */
+  correo_tipos?: TipoNotificacion[];
   created_at: string;
 }
 
@@ -106,7 +108,14 @@ export interface ComentarioTarea {
   created_at: string;
 }
 
-export type TipoNotificacion = "mencion" | "asignacion" | "estatus" | "vencida" | "ticket" | "eliminada";
+export type TipoNotificacion =
+  | "mencion"
+  | "asignacion"
+  | "estatus"
+  | "vencida"
+  | "ticket"
+  | "eliminada"
+  | "importacion";
 
 export interface Notificacion {
   id: string;

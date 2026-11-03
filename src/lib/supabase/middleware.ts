@@ -27,7 +27,8 @@ export async function actualizarSesion(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const ruta = request.nextUrl.pathname;
-  const esPublica = RUTAS_PUBLICAS.some((r) => ruta.startsWith(r));
+  // /api/avisos-correo lo llama la base de datos (sin sesión); se protege con su secreto.
+  const esPublica = RUTAS_PUBLICAS.some((r) => ruta.startsWith(r)) || ruta === "/api/avisos-correo";
 
   if (!user && !esPublica) {
     const url = request.nextUrl.clone();

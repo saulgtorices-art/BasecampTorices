@@ -48,11 +48,9 @@ interface Lote {
   deshecha_at: string | null;
 }
 
-/** Botón + modal de carga masiva desde Excel / CSV / pegar desde Excel. Solo líderes (admin). */
+/** Botón + modal de carga masiva desde Excel / CSV / pegar desde Excel. Para todo el equipo. */
 export default function ImportarTareas() {
-  const { esAdmin } = useDatos();
   const [abierto, setAbierto] = useState(false);
-  if (!esAdmin) return null;
   return (
     <>
       <button className="btn-secundario" onClick={() => setAbierto(true)} title="Cargar tareas desde Excel">
@@ -65,7 +63,7 @@ export default function ImportarTareas() {
 
 function Modal({ onCerrar }: { onCerrar: () => void }) {
   const supabase = supabaseNavegador();
-  const { clientes, miembros, tareas, clientePorId, miembroPorId, avisar } = useDatos();
+  const { yo, esAdmin, clientes, miembros, tareas, clientePorId, miembroPorId, avisar } = useDatos();
 
   const [archivo, setArchivo] = useState<string>("");
   const [hojas, setHojas] = useState<Hoja[]>([]);
@@ -264,7 +262,7 @@ function Modal({ onCerrar }: { onCerrar: () => void }) {
                   <p className="text-sm text-slate-500">y {resultado.clientes_nuevos} clientes nuevos</p>
                 )}
                 <p className="mt-2 text-sm text-slate-500">
-                  A cada responsable le llegó un solo aviso con sus tareas nuevas.
+                  A cada responsable le llegó un solo aviso con sus tareas nuevas{esAdmin ? "" : " y a tu líder, el resumen de la carga"}.
                 </p>
                 <div className="mt-6 flex justify-center gap-2">
                   <button className="btn-secundario" onClick={() => deshacer({ id: resultado.lote, archivo })}>
@@ -520,7 +518,7 @@ function Modal({ onCerrar }: { onCerrar: () => void }) {
                       </div>
                       {l.deshecha_at ? (
                         <span className="text-xs text-slate-400">Deshecha</span>
-                      ) : (
+                      ) : !esAdmin && l.creado_por !== yo.id ? null : (
                         <button className="btn-secundario py-1 text-xs" onClick={() => deshacer(l)}>
                           <Undo2 size={13} /> Deshacer
                         </button>
