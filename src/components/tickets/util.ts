@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { supabaseNavegador } from "@/lib/supabase/client";
+import { traerTodo } from "@/lib/supabase/traerTodo";
 import type { EstadoTicket, Prioridad, Ticket } from "@/types/db";
 
 export const folio = (n: number) => `TK-${String(n).padStart(4, "0")}`;
@@ -64,8 +65,11 @@ export function useTickets() {
   const [cargando, setCargando] = useState(true);
 
   const cargar = useCallback(async () => {
-    const { data } = await supabase.from("tickets").select("*").order("created_at", { ascending: false }).limit(2000);
-    setTickets((data as Ticket[]) ?? []);
+    // Paginado: Supabase corta cada respuesta en "Max rows" aunque se pida más.
+    const { data } = await traerTodo<Ticket>((desde, hasta) =>
+      supabase.from("tickets").select("*").order("created_at", { ascending: false }).order("id").range(desde, hasta),
+    );
+    setTickets(data);
     setCargando(false);
   }, [supabase]);
 

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseServidor } from "@/lib/supabase/server";
+import { traerTodo } from "@/lib/supabase/traerTodo";
 
 /**
  * Reporte mensual por persona en CSV.
@@ -27,21 +28,29 @@ export async function GET(request: Request) {
   const desdeTs = `${inicioMes}T00:00:00-06:00`;
   const hastaTs = `${siguiente}T00:00:00-06:00`;
 
-  let qTareasMes = supabase.from("v_tareas_mes").select("tarea_id, responsable_id").eq("mes", inicioMes);
-  let qRegistros = supabase
-    .from("registros_tiempo")
-    .select("tarea_id, miembro_id, minutos")
-    .gte("inicio", desdeTs)
-    .lt("inicio", hastaTs)
-    .not("minutos", "is", null);
-  if (miembro) {
-    qTareasMes = qTareasMes.eq("responsable_id", miembro);
-    qRegistros = qRegistros.eq("miembro_id", miembro);
-  }
+  // Se arma una consulta nueva por página: los builders de Supabase se modifican en sitio.
+  const qTareasMes = () => {
+    const q = supabase.from("v_tareas_mes").select("tarea_id, responsable_id").eq("mes", inicioMes);
+    return miembro ? q.eq("responsable_id", miembro) : q;
+  };
+  const qRegistros = () => {
+    const q = supabase
+      .from("registros_tiempo")
+      .select("tarea_id, miembro_id, minutos")
+      .gte("inicio", desdeTs)
+      .lt("inicio", hastaTs)
+      .not("minutos", "is", null);
+    return miembro ? q.eq("miembro_id", miembro) : q;
+  };
 
+  // Paginado: Supabase corta cada respuesta en "Max rows" aunque se pida más.
   const [tareasMes, registros, miembros] = await Promise.all([
-    qTareasMes.limit(10000),
-    qRegistros.limit(50000),
+    traerTodo<{ tarea_id: string; responsable_id: string | null }>((desde, hasta) =>
+      qTareasMes().order("tarea_id").order("responsable_id").range(desde, hasta),
+    ),
+    traerTodo<{ tarea_id: string; miembro_id: string; minutos: number | null }>((desde, hasta) =>
+      qRegistros().order("id").range(desde, hasta),
+    ),
     supabase.from("miembros").select("id, nombre"),
   ]);
   const error = tareasMes.error ?? registros.error ?? miembros.error;

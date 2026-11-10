@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 import { supabaseNavegador } from "@/lib/supabase/client";
+import { traerTodo } from "@/lib/supabase/traerTodo";
 import type { Celula, Cliente, Miembro, RegistroTiempo, Tarea, TareaEditable } from "@/types/db";
 
 type Aviso = { id: number; texto: string; tipo: "error" | "ok" };
@@ -103,7 +104,10 @@ export function DatosProvider({ yo, children }: { yo: Miembro; children: React.R
     const [c, m, t, r, ce] = await Promise.all([
       supabase.from("clientes").select("*").order("nombre"),
       supabase.from("miembros").select("*").order("nombre"),
-      supabase.from("tareas").select("*").order("posicion").limit(10000),
+      // Paginado: Supabase corta cada respuesta en "Max rows" aunque se pida más.
+      traerTodo<Tarea>((desde, hasta) =>
+        supabase.from("tareas").select("*").order("posicion").order("id").range(desde, hasta),
+      ),
       supabase.from("registros_tiempo").select("*").eq("miembro_id", yo.id).is("fin", null).maybeSingle(),
       supabase.from("celulas").select("*").order("numero"),
     ]);
